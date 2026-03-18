@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:text="Date &amp; Time" android:textColor="@color/text_secondary" android:textSize="13sp"/>
+    <TextView
+        android:id="@+id/tvDate"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:textColor="@color/text_primary" android:textSize="15sp"
+        android:paddingVertical="10dp"
+        android:background="?attr/selectableItemBackground"
+        android:clickable="true" android:focusable="true"/>
+    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/divider"/>
+
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:text="Amount" android:textColor="@color/text_secondary" android:textSize="13sp" android:layout_marginTop="16dp"/>
+    <EditText
+        android:id="@+id/etAmount"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:hint="₹ 0.00" android:textColor="@color/text_primary"
+        android:textSize="22sp" android:textStyle="bold"
+        android:textColorHint="@color/text_hint" android:inputType="numberDecimal"
+        android:background="@android:color/transparent" android:paddingVertical="10dp"/>
+    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/divider"/>
+
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:text="Note (optional)" android:textColor="@color/text_secondary" android:textSize="13sp" android:layout_marginTop="16dp"/>
+    <EditText
+        android:id="@+id/etNote"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:hint="Add a note..." android:textColor="@color/text_primary"
+        android:textColorHint="@color/text_hint"
+        android:background="@android:color/transparent" android:paddingVertical="10dp"/>
+    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/divider"/>
+
+</merge>

@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/background">
+
+    <!-- Top Bar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="16dp"
+        android:background="@color/surface">
+
+        <ImageView
+            android:id="@+id/btnBack"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_arrow_back"
+            app:tint="@color/text_primary"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Back"/>
+
+        <TextView
+            android:id="@+id/tvToolbarTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Add Transaction"
+            android:textColor="@color/text_primary"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginStart="16dp"/>
+    </LinearLayout>
+
+    <!-- Type Toggle -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="@color/surface"
+        android:padding="12dp">
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnExpense"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:text="Expense"
+            android:textAllCaps="false"
+            android:background="@drawable/bg_toggle_selected"
+            android:textColor="#FFFFFF"/>
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnIncome"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:text="Income"
+            android:textAllCaps="false"
+            android:background="@android:color/transparent"
+            android:textColor="@color/toggle_text_unselected"
+            android:layout_marginHorizontal="6dp"/>
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnDebt"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:text="Debt"
+            android:textAllCaps="false"
+            android:background="@android:color/transparent"
+            android:textColor="@color/toggle_text_unselected"/>
+    </LinearLayout>
+
+    <!-- ViewFlipper: 0=Expense, 1=Income, 2=Debt -->
+    <ViewFlipper
+        android:id="@+id/viewFlipper"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:inAnimation="@anim/slide_in_right"
+        android:outAnimation="@anim/slide_out_left">
+
+        <!-- EXPENSE FORM -->
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fillViewport="true">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <include layout="@layout/form_date_amount_note"/>
+
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="Category" android:textColor="@color/text_secondary" android:textSize="13sp" android:layout_marginTop="16dp"/>
+                <EditText android:id="@+id/etExpenseCategory"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:hint="e.g. Food, Transport" android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_hint" android:background="@android:color/transparent"
+                    android:paddingVertical="10dp"/>
+                <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/divider"/>
+
+                <include layout="@layout/form_save_buttons"/>
+            </LinearLayout>
+        </ScrollView>
+
+        <!-- INCOME FORM -->
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fillViewport="true">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <include layout="@layout/form_date_amount_note"/>
+
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="Income Source" android:textColor="@color/text_secondary" android:textSize="13sp" android:layout_marginTop="16dp"/>
+                <EditText android:id="@+id/etIncomeSource"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:hint="e.g. Salary, Freelance, Gift" android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_hint" android:background="@android:color/transparent"
+                    android:paddingVertical="10dp"/>
+                <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/divider"/>
+
+                <include layout="@layout/form_save_buttons"/>
+            </LinearLayout>
+        </ScrollView>
+
+        <!-- DEBT FORM -->
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fillViewport="true">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <include layout="@layout/form_date_amount_note"/>
+
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="Person" android:textColor="@color/text_secondary" android:textSize="13sp" android:layout_marginTop="16dp"/>
+                <EditText android:id="@+id/etDebtPerson"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:hint="Name" android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_hint" android:background="@android:color/transparent"
+                    android:paddingVertical="10dp"/>
+                <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/divider"/>
+
+                <!-- Give / Taken toggle -->
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="Type" android:textColor="@color/text_secondary" android:textSize="13sp" android:layout_marginTop="16dp"/>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/bg_toggle"
+                    android:padding="4dp">
+                    <androidx.appcompat.widget.AppCompatButton
+                        android:id="@+id/btnToGive"
+                        android:layout_width="0dp" android:layout_height="38dp" android:layout_weight="1"
+                        android:text="To Give" android:textAllCaps="false"
+                        android:background="@drawable/bg_toggle_selected" android:textColor="#FFFFFF"/>
+                    <androidx.appcompat.widget.AppCompatButton
+                        android:id="@+id/btnToGet"
+                        android:layout_width="0dp" android:layout_height="38dp" android:layout_weight="1"
+                        android:text="To Get" android:textAllCaps="false"
+                        android:background="@android:color/transparent"
+                        android:textColor="@color/toggle_text_unselected"
+                        android:layout_marginStart="4dp"/>
+                </LinearLayout>
+
+                <include layout="@layout/form_save_buttons"/>
+            </LinearLayout>
+        </ScrollView>
+
+    </ViewFlipper>
+
+</LinearLayout>

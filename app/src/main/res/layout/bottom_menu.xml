@@ -1,0 +1,23 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/nav_trans"
+        android:title="Trans."
+        android:icon="@drawable/ic_list"/>
+
+    <item
+        android:id="@+id/nav_stats"
+        android:title="Stats"
+        android:icon="@drawable/ic_chart"/>
+
+    <item
+        android:id="@+id/nav_accounts"
+        android:title="Accounts"
+        android:icon="@drawable/ic_wallet"/>
+
+    <item
+        android:id="@+id/nav_more"
+        android:title="More"
+        android:icon="@drawable/ic_more"/>
+
+</menu>

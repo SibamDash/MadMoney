@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark Theme Colors (True Black) -->
+    <color name="background">#000000</color>
+    <color name="surface">#000000</color>
+    <color name="surface_variant">#121212</color>
+    <color name="text_primary">#FFFFFF</color>
+    <color name="text_secondary">#B0B0B0</color>
+    <color name="text_hint">#666666</color>
+    <color name="divider">#2C2C2C</color>
+    <color name="card_background">#121212</color>
+
+    <!-- Toggle Button Colors -->
+    <color name="toggle_bg">#1E1E1E</color>
+    <color name="toggle_selected_bg">#FF5252</color>
+    <color name="toggle_text_unselected">#B0B0B0</color>
+    <color name="toggle_text_selected">#FFFFFF</color>
+
+    <!-- Nav Bar Colors -->
+    <color name="nav_item_unselected">#B0B0B0</color>
+    <color name="nav_item_selected">#FF5252</color>
+
+    <color name="nav_item_color">#FFFFFF</color>
+</resources>
