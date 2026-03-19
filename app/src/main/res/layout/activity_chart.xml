@@ -26,7 +26,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Spending by Category"
+            android:text="Transactions by Category"
             android:textColor="@color/text_primary"
             android:textSize="18sp"
             android:textStyle="bold"

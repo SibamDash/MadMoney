@@ -23,21 +23,22 @@ class ChartActivity : AppCompatActivity() {
 
         val (start, end) = currentMonthRange()
         val transactions = DatabaseHelper(this).getTransactions(start, end)
-            .filter { it.type == "expense" }
 
-        val grouped = transactions.groupBy { it.category }
-            .mapValues { (_, v) -> v.sumOf { it.amount } }
-            .entries.sortedByDescending { it.value }
+        val grouped = listOf(
+            "Expense" to transactions.filter { it.type == "expense" }.sumOf { it.amount },
+            "Income"  to transactions.filter { it.type == "income" }.sumOf { it.amount },
+            "Debts"   to transactions.filter { it.type == "togive" || it.type == "toget" }.sumOf { it.amount }
+        ).filter { it.second > 0 }
 
-        val total = grouped.sumOf { it.value }.takeIf { it > 0 } ?: 1.0
+        val total = grouped.sumOf { it.second }.takeIf { it > 0 } ?: 1.0
 
         val slices = grouped.mapIndexed { i, (_, amount) ->
             Pair((amount / total * 360f).toFloat(), Color.parseColor(palette[i % palette.size]))
         }
         findViewById<PieChartView>(R.id.pieChart).setData(slices)
 
-        val legendItems = grouped.mapIndexed { i, (cat, amount) ->
-            Pair(cat, Pair(amount, Color.parseColor(palette[i % palette.size])))
+        val legendItems = grouped.mapIndexed { i, (label, amount) ->
+            Pair(label, Pair(amount, Color.parseColor(palette[i % palette.size])))
         }
         findViewById<RecyclerView>(R.id.rvLegend).apply {
             layoutManager = LinearLayoutManager(this@ChartActivity)

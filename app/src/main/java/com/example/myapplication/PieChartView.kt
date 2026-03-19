@@ -17,7 +17,6 @@ class PieChartView @JvmOverloads constructor(
         textSize = 36f
     }
     private val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.WHITE
         style = Paint.Style.STROKE
         strokeWidth = 3f
     }
@@ -30,6 +29,7 @@ class PieChartView @JvmOverloads constructor(
 
     override fun onDraw(canvas: Canvas) {
         if (slices.isEmpty()) return
+        borderPaint.color = androidx.core.content.ContextCompat.getColor(context, R.color.text_primary)
         val size = minOf(width, height).toFloat()
         val margin = size * 0.05f
         val oval = RectF(margin, margin, size - margin, size - margin)
@@ -49,6 +49,8 @@ class PieChartView @JvmOverloads constructor(
             startAngle += sweep
         }
         // outer circle border
+        borderPaint.strokeWidth = 8f
         canvas.drawCircle(cx, cy, radius, borderPaint)
+        borderPaint.strokeWidth = 3f
     }
 }
