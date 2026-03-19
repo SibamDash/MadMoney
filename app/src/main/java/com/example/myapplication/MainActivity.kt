@@ -13,6 +13,8 @@ import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.appcompat.widget.SwitchCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.drawerlayout.widget.DrawerLayout
@@ -55,6 +57,14 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        // Apply saved dark mode preference before layout inflation
+        val prefs = getSharedPreferences("settings", MODE_PRIVATE)
+        val isDark = prefs.getBoolean("dark_mode", false)
+        AppCompatDelegate.setDefaultNightMode(
+            if (isDark) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
+        )
+
         setContentView(R.layout.activity_main)
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
@@ -80,11 +90,69 @@ class MainActivity : AppCompatActivity() {
         loadTransactions()
     }
 
+    private var backPressedTime = 0L
+
+    @Deprecated("Deprecated in Java")
+    override fun onBackPressed() {
+        val drawer = findViewById<DrawerLayout>(R.id.drawerLayout)
+        val searchView = findViewById<android.widget.SearchView>(R.id.searchView)
+        when {
+            drawer.isDrawerOpen(Gravity.END) -> drawer.closeDrawer(Gravity.END)
+            searchView.visibility == View.VISIBLE -> {
+                searchView.visibility = View.GONE
+                searchView.setQuery("", false)
+                transactions.clear(); transactions.addAll(allTransactions); adapter.notifyDataSetChanged()
+            }
+            System.currentTimeMillis() - backPressedTime < 2000 -> super.onBackPressed()
+            else -> {
+                backPressedTime = System.currentTimeMillis()
+                Toast.makeText(this, "Click again to close the app", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
     private fun setupSettings() {
         val drawer = findViewById<DrawerLayout>(R.id.drawerLayout)
+        val sidebar = drawer.getChildAt(1) // settings_sidebar ScrollView
+        val screenWidth = resources.displayMetrics.widthPixels
+        val collapsedWidth = (280 * resources.displayMetrics.density).toInt()
+        var isExpanded = false
+
         findViewById<android.widget.ImageView>(R.id.ivSettings).setOnClickListener {
             drawer.openDrawer(Gravity.END)
         }
+
+        // Double-tap "Settings" header to expand/collapse sidebar to full page
+        findViewById<TextView>(R.id.tvSettingsHeader).setOnClickListener(object : View.OnClickListener {
+            var lastClick = 0L
+            override fun onClick(v: View) {
+                val now = System.currentTimeMillis()
+                if (now - lastClick < 300) {
+                    val toWidth = if (isExpanded) collapsedWidth else screenWidth
+                    android.animation.ValueAnimator.ofInt(sidebar.layoutParams.width, toWidth).apply {
+                        duration = 250
+                        addUpdateListener {
+                            sidebar.layoutParams.width = it.animatedValue as Int
+                            sidebar.requestLayout()
+                        }
+                        start()
+                    }
+                    isExpanded = !isExpanded
+                }
+                lastClick = now
+            }
+        })
+
+        // Reset sidebar width when drawer closes
+        drawer.addDrawerListener(object : DrawerLayout.SimpleDrawerListener() {
+            override fun onDrawerClosed(drawerView: View) {
+                if (isExpanded) {
+                    sidebar.layoutParams.width = collapsedWidth
+                    sidebar.requestLayout()
+                    isExpanded = false
+                }
+            }
+        })
 
         fun toggleSection(content: LinearLayout, arrow: TextView) {
             if (content.visibility == View.GONE) {
@@ -106,6 +174,18 @@ class MainActivity : AppCompatActivity() {
         findViewById<LinearLayout>(R.id.headerCustomize).setOnClickListener {
             toggleSection(findViewById(R.id.contentCustomize), findViewById(R.id.arrowCustomize))
         }
+
+        // Dark Mode switch
+        val prefs = getSharedPreferences("settings", MODE_PRIVATE)
+        val switchDarkMode = findViewById<SwitchCompat>(R.id.switchDarkMode)
+        switchDarkMode.isChecked = prefs.getBoolean("dark_mode", false)
+        switchDarkMode.setOnCheckedChangeListener { _, isChecked ->
+            prefs.edit().putBoolean("dark_mode", isChecked).apply()
+            AppCompatDelegate.setDefaultNightMode(
+                if (isChecked) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
+            )
+        }
+
         findViewById<TextView>(R.id.optionTransitions).setOnClickListener {
             Toast.makeText(this, "Transitions", Toast.LENGTH_SHORT).show()
             drawer.closeDrawer(Gravity.END)
@@ -299,6 +379,14 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupBottomNavigation() {
         val nav = findViewById<BottomNavigationView>(R.id.bottomNav)
+        fun updateIconScale(selectedId: Int) {
+            for (i in 0 until nav.menu.size()) {
+                val menuItem = nav.menu.getItem(i)
+                val icon = nav.findViewById<android.view.View>(menuItem.itemId)
+                val scale = if (menuItem.itemId == selectedId) 1.0f else 20f / 24f
+                icon?.animate()?.scaleX(scale)?.scaleY(scale)?.setDuration(150)?.start()
+            }
+        }
         nav.setOnItemSelectedListener { item ->
             activeFilter = when (item.itemId) {
                 R.id.nav_income -> "expense"
@@ -307,7 +395,10 @@ class MainActivity : AppCompatActivity() {
                 else -> "all"
             }
             applyActiveFilter()
+            updateIconScale(item.itemId)
             true
         }
+        // Apply scale to default selected item
+        nav.post { updateIconScale(nav.selectedItemId) }
     }
 }
