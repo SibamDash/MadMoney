@@ -4,16 +4,18 @@ import android.app.DatePickerDialog
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.view.Gravity
 import android.view.View
+import android.widget.LinearLayout
 import android.widget.SearchView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.drawerlayout.widget.DrawerLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomnavigation.BottomNavigationView
@@ -66,7 +68,7 @@ class MainActivity : AppCompatActivity() {
         setupBottomNavigation()
         setupTabLayout()
         setupSearch()
-        setupBackup()
+        setupSettings()
 
         findViewById<FloatingActionButton>(R.id.fabAdd).setOnClickListener {
             startActivity(Intent(this, AddTransactionActivity::class.java))
@@ -78,20 +80,53 @@ class MainActivity : AppCompatActivity() {
         loadTransactions()
     }
 
-    private fun setupBackup() {
-        findViewById<android.widget.ImageView>(R.id.ivBackup).setOnClickListener {
-            AlertDialog.Builder(this)
-                .setTitle("Backup & Restore")
-                .setMessage("Export saves all transactions to a JSON file.\nImport restores transactions from a JSON file.")
-                .setPositiveButton("Export") { _, _ ->
-                    val fileName = "backup_${SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())}.json"
-                    exportLauncher.launch(fileName)
-                }
-                .setNegativeButton("Import") { _, _ ->
-                    importLauncher.launch(arrayOf("application/json", "*/*"))
-                }
-                .setNeutralButton("Cancel", null)
-                .show()
+    private fun setupSettings() {
+        val drawer = findViewById<DrawerLayout>(R.id.drawerLayout)
+        findViewById<android.widget.ImageView>(R.id.ivSettings).setOnClickListener {
+            drawer.openDrawer(Gravity.END)
+        }
+
+        fun toggleSection(content: LinearLayout, arrow: TextView) {
+            if (content.visibility == View.GONE) {
+                content.visibility = View.VISIBLE
+                arrow.text = "▼"
+            } else {
+                content.visibility = View.GONE
+                arrow.text = "▶"
+            }
+        }
+
+        // Saved Logs
+        findViewById<TextView>(R.id.headerSavedLogs).setOnClickListener {
+            drawer.closeDrawer(Gravity.END)
+            startActivity(Intent(this, SavedLogsActivity::class.java))
+        }
+
+        // Customize
+        findViewById<LinearLayout>(R.id.headerCustomize).setOnClickListener {
+            toggleSection(findViewById(R.id.contentCustomize), findViewById(R.id.arrowCustomize))
+        }
+        findViewById<TextView>(R.id.optionTransitions).setOnClickListener {
+            Toast.makeText(this, "Transitions", Toast.LENGTH_SHORT).show()
+            drawer.closeDrawer(Gravity.END)
+        }
+        findViewById<TextView>(R.id.optionPosition).setOnClickListener {
+            Toast.makeText(this, "Position", Toast.LENGTH_SHORT).show()
+            drawer.closeDrawer(Gravity.END)
+        }
+
+        // Backup
+        findViewById<LinearLayout>(R.id.headerBackup).setOnClickListener {
+            toggleSection(findViewById(R.id.contentBackup), findViewById(R.id.arrowBackup))
+        }
+        findViewById<TextView>(R.id.optionExport).setOnClickListener {
+            drawer.closeDrawer(Gravity.END)
+            val fileName = "backup_${SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())}.json"
+            exportLauncher.launch(fileName)
+        }
+        findViewById<TextView>(R.id.optionImport).setOnClickListener {
+            drawer.closeDrawer(Gravity.END)
+            importLauncher.launch(arrayOf("application/json", "*/*"))
         }
     }
 
@@ -120,6 +155,10 @@ class MainActivity : AppCompatActivity() {
                     }
                     .setNegativeButton("Cancel", null)
                     .show()
+            },
+            onStarToggle = { t, starred ->
+                DatabaseHelper(this).toggleStar(t.id, starred)
+                loadTransactions()
             }
         )
         findViewById<RecyclerView>(R.id.recyclerView).apply {
