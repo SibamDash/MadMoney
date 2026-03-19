@@ -11,5 +11,6 @@ data class Transaction(
     val description: String = "",
     val date: Long = System.currentTimeMillis(),
     val isCompleted: Boolean = false,
-    val completedAt: Long = 0
+    val completedAt: Long = 0,
+    val isStarred: Boolean = false
 )

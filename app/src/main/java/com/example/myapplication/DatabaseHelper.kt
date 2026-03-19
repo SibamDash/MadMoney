@@ -5,7 +5,7 @@ import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 
-class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, "transactions.db", null, 3) {
+class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, "transactions.db", null, 4) {
 
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL("""
@@ -20,7 +20,8 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, "transactions
                 description TEXT,
                 date INTEGER NOT NULL,
                 isCompleted INTEGER DEFAULT 0,
-                completedAt INTEGER DEFAULT 0
+                completedAt INTEGER DEFAULT 0,
+                isStarred INTEGER DEFAULT 0
             )
         """)
     }
@@ -28,6 +29,9 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, "transactions
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
         if (oldVersion < 3) {
             db.execSQL("ALTER TABLE transactions ADD COLUMN completedAt INTEGER DEFAULT 0")
+        }
+        if (oldVersion < 4) {
+            db.execSQL("ALTER TABLE transactions ADD COLUMN isStarred INTEGER DEFAULT 0")
         }
     }
 
@@ -69,7 +73,8 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, "transactions
                     description = it.getString(7) ?: "",
                     date = it.getLong(8),
                     isCompleted = it.getInt(9) == 1,
-                    completedAt = it.getLong(10)
+                    completedAt = it.getLong(10),
+                    isStarred = it.getInt(11) == 1
                 ))
             }
         }
@@ -84,7 +89,41 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, "transactions
         writableDatabase.update("transactions", values, "id = ?", arrayOf(id.toString()))
     }
 
+    fun getDebtPersonsSorted(): List<String> {
+        val cursor = readableDatabase.rawQuery(
+            "SELECT title, COUNT(*) as cnt, MAX(date) as last FROM transactions WHERE type IN ('togive','toget') GROUP BY title ORDER BY cnt DESC, last DESC",
+            null
+        )
+        val list = mutableListOf<String>()
+        cursor.use { while (it.moveToNext()) list.add(it.getString(0)) }
+        return list
+    }
+
     fun deleteTransaction(id: Long) {
         writableDatabase.delete("transactions", "id = ?", arrayOf(id.toString()))
+    }
+
+    fun toggleStar(id: Long, starred: Boolean) {
+        val values = ContentValues().apply { put("isStarred", if (starred) 1 else 0) }
+        writableDatabase.update("transactions", values, "id = ?", arrayOf(id.toString()))
+    }
+
+    fun getStarredTransactions(): List<Transaction> {
+        val list = mutableListOf<Transaction>()
+        val cursor = readableDatabase.query(
+            "transactions", null, "isStarred = 1", null, null, null, "date DESC"
+        )
+        cursor.use {
+            while (it.moveToNext()) {
+                list.add(Transaction(
+                    id = it.getLong(0), title = it.getString(1), type = it.getString(2),
+                    amount = it.getDouble(3), category = it.getString(4), account = it.getString(5),
+                    note = it.getString(6) ?: "", description = it.getString(7) ?: "",
+                    date = it.getLong(8), isCompleted = it.getInt(9) == 1,
+                    completedAt = it.getLong(10), isStarred = it.getInt(11) == 1
+                ))
+            }
+        }
+        return list
     }
 }

@@ -13,7 +13,8 @@ import java.util.*
 class TransactionAdapter(
     private val transactions: List<Transaction>,
     private val onCheckClick: (Transaction) -> Unit,
-    private val onCrossClick: (Transaction) -> Unit
+    private val onCrossClick: (Transaction) -> Unit,
+    private val onStarToggle: (Transaction, Boolean) -> Unit
 ) : RecyclerView.Adapter<TransactionAdapter.ViewHolder>() {
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -26,6 +27,8 @@ class TransactionAdapter(
         val actionButtons: View = view.findViewById(R.id.actionButtons)
         val btnCheck: ImageView = view.findViewById(R.id.btnCheck)
         val btnCross: ImageView = view.findViewById(R.id.btnCross)
+        val ivStar: ImageView = view.findViewById(R.id.ivStar)
+        val cardView: View = view.findViewById(R.id.cardView)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -77,6 +80,35 @@ class TransactionAdapter(
                 } else holder.tvSettledAt.visibility = View.GONE
             }
         }
+
+        // Star state
+        if (item.isStarred) {
+            holder.ivStar.setImageResource(R.drawable.ic_star_filled)
+            holder.ivStar.setColorFilter(ContextCompat.getColor(ctx, R.color.text_primary))
+            holder.ivStar.visibility = View.VISIBLE
+        } else {
+            holder.ivStar.visibility = View.GONE
+        }
+
+        // Double-tap on card to toggle star
+        holder.cardView.setOnClickListener(object : View.OnClickListener {
+            private var lastClick = 0L
+            override fun onClick(v: View) {
+                val now = System.currentTimeMillis()
+                if (now - lastClick < 300) {
+                    val newStarred = !item.isStarred
+                    if (newStarred) {
+                        holder.ivStar.setImageResource(R.drawable.ic_star_filled)
+                        holder.ivStar.setColorFilter(ContextCompat.getColor(v.context, R.color.text_primary))
+                        holder.ivStar.visibility = View.VISIBLE
+                    } else {
+                        holder.ivStar.visibility = View.GONE
+                    }
+                    onStarToggle(item, newStarred)
+                }
+                lastClick = now
+            }
+        })
 
         holder.btnCheck.setOnClickListener { onCheckClick(item) }
         holder.btnCross.setOnClickListener { onCrossClick(item) }
