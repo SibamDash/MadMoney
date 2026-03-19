@@ -89,7 +89,7 @@
             <com.google.android.material.tabs.TabItem android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Budget"/>
             <com.google.android.material.tabs.TabItem android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Total"/>
         </com.google.android.material.tabs.TabLayout>
-
+//third commit
         <LinearLayout
             android:id="@+id/summary"
             android:layout_below="@id/tabLayout"
@@ -142,8 +142,11 @@
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
             android:background="@color/surface"
+            app:backgroundTint="@color/surface"
             app:itemIconTint="@color/nav_item_color_state"
             app:itemTextColor="@color/nav_item_color_state"
+            app:itemTextAppearanceActive="@style/BoldNavLabel"
+            app:itemIconSize="24dp"
             app:itemActiveIndicatorStyle="@null"
             app:labelVisibilityMode="labeled"
             app:menu="@menu/bottom_menu"/>
