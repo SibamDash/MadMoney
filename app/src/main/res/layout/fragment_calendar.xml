@@ -1,30 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="@color/background">
 
-    <!-- Top Bar -->
+    <!-- Month navigation -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:padding="16dp"
+        android:padding="12dp"
         android:gravity="center_vertical"
         android:background="@color/surface">
 
         <ImageView
-            android:id="@+id/ivBack"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
+            android:id="@+id/ivPrevMonth"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
             android:src="@drawable/ic_arrow_back"
             app:tint="@color/text_primary"
-            android:contentDescription="Back" />
+            android:contentDescription="Prev" />
 
-        <!-- Tappable month/year label -->
         <LinearLayout
             android:id="@+id/layoutMonthPicker"
             android:layout_width="0dp"
@@ -39,7 +37,7 @@
                 android:id="@+id/tvMonthYear"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="20sp"
+                android:textSize="18sp"
                 android:textStyle="bold"
                 android:textColor="@color/text_primary"/>
 
@@ -47,16 +45,17 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text=" ▾"
-                android:textSize="24sp"
-                android:textColor="@color/text_secondary"
-                android:layout_gravity="center_vertical"
-                android:paddingBottom="2dp"/>
+                android:textSize="14sp"
+                android:textColor="@color/text_secondary"/>
         </LinearLayout>
 
-        <!-- Dummy view to balance ivBack for perfect centering -->
-        <View
-            android:layout_width="24dp"
-            android:layout_height="24dp" />
+        <ImageView
+            android:id="@+id/ivNextMonth"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:src="@drawable/ic_arrow_forward"
+            app:tint="@color/text_primary"
+            android:contentDescription="Next" />
     </LinearLayout>
 
     <!-- Day-of-week headers -->
@@ -66,7 +65,6 @@
         android:orientation="horizontal"
         android:background="@color/surface_variant"
         android:paddingVertical="6dp">
-
         <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:text="Sun" android:textSize="11sp" android:textColor="@color/text_secondary"/>
         <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:text="Mon" android:textSize="11sp" android:textColor="@color/text_secondary"/>
         <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:text="Tue" android:textSize="11sp" android:textColor="@color/text_secondary"/>

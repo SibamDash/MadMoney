@@ -5,7 +5,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!-- Main Content -->
     <RelativeLayout
         android:id="@+id/main"
         android:layout_width="match_parent"
@@ -36,7 +35,7 @@
             <ImageView android:id="@+id/ivSettings" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_settings" app:tint="@color/text_primary" android:contentDescription="Settings" />
         </LinearLayout>
 
-        <!-- Search Bar (hidden by default) -->
+        <!-- Search Bar -->
         <SearchView
             android:id="@+id/searchView"
             android:layout_width="match_parent"
@@ -44,7 +43,7 @@
             android:layout_below="@id/topBar"
             android:visibility="gone"
             android:background="@color/surface"
-            android:queryHint="Search by name, category, type, amount..."
+            android:queryHint="Search transactions..."
             android:iconifiedByDefault="false"/>
 
         <com.google.android.material.tabs.TabLayout
@@ -56,13 +55,9 @@
             app:tabIndicatorColor="@color/orange_primary"
             app:tabSelectedTextColor="@color/orange_primary"
             app:tabTextColor="@color/text_secondary"
-            app:tabMode="fixed">
-            <com.google.android.material.tabs.TabItem android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Daily"/>
-            <com.google.android.material.tabs.TabItem android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Calendar"/>
-            <com.google.android.material.tabs.TabItem android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Graph"/>
-            <com.google.android.material.tabs.TabItem android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Budget"/>
-            <com.google.android.material.tabs.TabItem android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Total"/>
-        </com.google.android.material.tabs.TabLayout>
+            app:tabMode="fixed"/>
+
+        <!-- Summary bar -->
         <LinearLayout
             android:id="@+id/summary"
             android:layout_below="@id/tabLayout"
@@ -87,15 +82,12 @@
             </LinearLayout>
         </LinearLayout>
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recyclerView"
-            android:layout_below="@id/summary"
-            android:layout_above="@id/bottomNav"
+        <androidx.viewpager2.widget.ViewPager2
+            android:id="@+id/viewPager"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:padding="8dp"
-            android:clipToPadding="false"
-            android:clipChildren="false"/>
+            android:layout_below="@id/summary"
+            android:layout_above="@id/bottomNav"/>
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/fabAdd"
@@ -126,7 +118,6 @@
 
     </RelativeLayout>
 
-    <!-- Settings Sidebar (right drawer) -->
     <include layout="@layout/settings_sidebar"/>
 
 </androidx.drawerlayout.widget.DrawerLayout>

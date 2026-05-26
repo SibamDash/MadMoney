@@ -1,10 +1,13 @@
 package com.example.myapplication
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
-import android.view.LayoutInflater
+import android.view.GestureDetector
+import android.view.MotionEvent
 import android.view.View
-import android.view.ViewGroup
+import android.view.animation.AccelerateInterpolator
+import android.view.animation.DecelerateInterpolator
 import android.widget.LinearLayout
 import android.widget.NumberPicker
 import android.widget.TextView
@@ -16,50 +19,151 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
+import kotlin.math.abs
 
 class CalendarActivity : AppCompatActivity() {
 
-    private val calendar = Calendar.getInstance()
+    private val calendar: Calendar = Calendar.getInstance()
+    private lateinit var gestureDetector: GestureDetector
+    private var isAnimating = false
 
+    private lateinit var tvMonthYear: TextView
+    private lateinit var rvCalendar: RecyclerView
+
+    @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_calendar)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.root)) { v, insets ->
+
+        // Initialize views
+        tvMonthYear = findViewById(R.id.tvMonthYear)
+        rvCalendar = findViewById(R.id.rvCalendar)
+        val root = findViewById<View>(R.id.root)
+        val btnBack = findViewById<View>(R.id.ivBack)
+        val layoutMonthPicker = findViewById<View>(R.id.layoutMonthPicker)
+
+        // Setup Window Insets
+        ViewCompat.setOnApplyWindowInsetsListener(root) { view, insets ->
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(bars.left, bars.top, bars.right, bars.bottom)
+            view.setPadding(bars.left, bars.top, bars.right, bars.bottom)
             insets
         }
 
-        findViewById<View>(R.id.ivBack).setOnClickListener { finish() }
-        findViewById<View>(R.id.ivPrevMonth).setOnClickListener {
-            calendar.add(Calendar.MONTH, -1); loadCalendar()
+        // Setup Swipe Gestures
+        gestureDetector = GestureDetector(this, object : GestureDetector.SimpleOnGestureListener() {
+            override fun onFling(
+                e1: MotionEvent?,
+                e2: MotionEvent,
+                velocityX: Float,
+                velocityY: Float
+            ): Boolean {
+                if (e1 == null) return false
+                val diffX = e2.x - e1.x
+                // Swipe detection (User requested Swipe Left -> Previous Month)
+                if (abs(diffX) > 100 && abs(velocityX) > 100) {
+                    if (diffX < 0) {
+                        // Swipe Left -> Previous Month
+                        animateMonthChange(-1)
+                    } else {
+                        // Swipe Right -> Next Month
+                        animateMonthChange(1)
+                    }
+                    return true
+                }
+                return false
+            }
+
+            override fun onDown(e: MotionEvent): Boolean = true
+        })
+
+        // Touch Listeners with performClick() for accessibility
+        root.setOnTouchListener { view, event ->
+            if (gestureDetector.onTouchEvent(event)) return@setOnTouchListener true
+            if (event.action == MotionEvent.ACTION_UP) {
+                view.performClick()
+            }
+            true
         }
-        findViewById<View>(R.id.ivNextMonth).setOnClickListener {
-            calendar.add(Calendar.MONTH, 1); loadCalendar()
+
+        rvCalendar.setOnTouchListener { _, event ->
+            // Catch swipes on the grid, but let it handle its own touches if not a swipe
+            gestureDetector.onTouchEvent(event)
+            false
         }
-        findViewById<TextView>(R.id.tvMonthYear).setOnClickListener { showMonthYearPicker() }
-        findViewById<View>(R.id.layoutMonthPicker).setOnClickListener { showMonthYearPicker() }
+
+        btnBack.setOnClickListener { finish() }
+        layoutMonthPicker.setOnClickListener { showMonthYearPicker() }
+        
         loadCalendar()
+    }
+
+    /**
+     * Smoothly animates the month transition.
+     * @param delta Direction of change (-1 for previous, 1 for next)
+     */
+    private fun animateMonthChange(delta: Int) {
+        if (isAnimating) return
+        isAnimating = true
+
+        val screenWidth = resources.displayMetrics.widthPixels.toFloat()
+        
+        // Outgoing Translation: If delta is -1 (prev), we swiped left, current goes left (-screenWidth)
+        val outTranslation = if (delta > 0) screenWidth else -screenWidth
+        val inStartTranslation = if (delta > 0) -screenWidth else screenWidth
+
+        tvMonthYear.animate().alpha(0f).setDuration(150).start()
+
+        rvCalendar.animate()
+            .translationX(outTranslation)
+            .alpha(0f)
+            .setDuration(200)
+            .setInterpolator(AccelerateInterpolator())
+            .withEndAction {
+                calendar.add(Calendar.MONTH, delta)
+                loadCalendar()
+                
+                // Prepare for entrance
+                rvCalendar.translationX = inStartTranslation
+                rvCalendar.alpha = 0f
+                tvMonthYear.alpha = 0f
+                
+                // Ingoing animation
+                rvCalendar.animate()
+                    .translationX(0f)
+                    .alpha(1f)
+                    .setDuration(250)
+                    .setInterpolator(DecelerateInterpolator())
+                    .withEndAction { isAnimating = false }
+                    .start()
+                
+                tvMonthYear.animate().alpha(1f).setDuration(250).start()
+            }
+            .start()
     }
 
     private fun showMonthYearPicker() {
         val months = arrayOf("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec")
         val monthPicker = NumberPicker(this).apply {
-            minValue = 0; maxValue = 11
+            minValue = 0
+            maxValue = 11
             displayedValues = months
             value = calendar.get(Calendar.MONTH)
             wrapSelectorWheel = true
         }
         val yearPicker = NumberPicker(this).apply {
-            minValue = 2000; maxValue = 2100
+            minValue = 2000
+            maxValue = 2100
             value = calendar.get(Calendar.YEAR)
             wrapSelectorWheel = false
         }
         val container = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
-            setPadding(32, 16, 32, 16)
+            val p = (24 * resources.displayMetrics.density).toInt()
+            setPadding(p, p / 2, p, p / 2)
             addView(monthPicker, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
             addView(yearPicker,  LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
         }
@@ -77,35 +181,43 @@ class CalendarActivity : AppCompatActivity() {
 
     private fun loadCalendar() {
         val fmt = SimpleDateFormat("MMMM yyyy", Locale.getDefault())
-        findViewById<TextView>(R.id.tvMonthYear).text = fmt.format(calendar.time)
+        tvMonthYear.text = fmt.format(calendar.time)
 
         val monthStart = (calendar.clone() as Calendar).apply {
             set(Calendar.DAY_OF_MONTH, 1)
-            set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0); set(Calendar.SECOND, 0)
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
         }
         val monthEnd = (calendar.clone() as Calendar).apply {
             set(Calendar.DAY_OF_MONTH, getActualMaximum(Calendar.DAY_OF_MONTH))
-            set(Calendar.HOUR_OF_DAY, 23); set(Calendar.MINUTE, 59); set(Calendar.SECOND, 59)
+            set(Calendar.HOUR_OF_DAY, 23)
+            set(Calendar.MINUTE, 59)
+            set(Calendar.SECOND, 59)
+            set(Calendar.MILLISECOND, 999)
         }
 
         val transactions = DatabaseHelper(this).getTransactions(monthStart.timeInMillis, monthEnd.timeInMillis)
 
+        // Process transaction data into a map for easy grid lookup
         val dayFmt = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        val dayMap = mutableMapOf<String, Triple<Double, Double, Double>>()
+        val dayMap = mutableMapOf<String, DaySummary>()
         for (t in transactions) {
             val key = dayFmt.format(Date(t.date))
-            val (inc, exp, debt) = dayMap.getOrDefault(key, Triple(0.0, 0.0, 0.0))
-            dayMap[key] = when (t.type) {
-                "income"          -> Triple(inc + t.amount, exp, debt)
-                "expense"         -> Triple(inc, exp + t.amount, debt)
-                "togive", "toget" -> Triple(inc, exp, debt + t.amount)
-                else              -> Triple(inc, exp, debt)
+            val current = dayMap.getOrDefault(key, DaySummary())
+            when (t.type) {
+                "income"          -> current.income += t.amount
+                "expense"         -> current.expense += t.amount
+                "togive", "toget" -> current.debt += t.amount
             }
+            dayMap[key] = current
         }
 
+        // Prepare grid cells
         val firstDayOfWeek = monthStart.get(Calendar.DAY_OF_WEEK) - 1
         val daysInMonth = monthEnd.get(Calendar.DAY_OF_MONTH)
-        val cells = ArrayList<Int?>().apply {
+        val cells = mutableListOf<Int?>().apply {
             repeat(firstDayOfWeek) { add(null) }
             for (d in 1..daysInMonth) add(d)
         }
@@ -118,65 +230,22 @@ class CalendarActivity : AppCompatActivity() {
         val year = calendar.get(Calendar.YEAR)
         val month = calendar.get(Calendar.MONTH) + 1
 
-        findViewById<RecyclerView>(R.id.rvCalendar).apply {
-            layoutManager = GridLayoutManager(this@CalendarActivity, 7)
+        rvCalendar.apply {
+            if (layoutManager == null) {
+                layoutManager = GridLayoutManager(this@CalendarActivity, 7)
+            }
             adapter = CalendarAdapter(cells, dayMap, year, month, todayDay) { day ->
-                val intent = Intent(this@CalendarActivity, MainActivity::class.java)
-                intent.putExtra("selected_date_millis",
-                    Calendar.getInstance().apply { set(year, month - 1, day) }.timeInMillis)
+                val targetCal = Calendar.getInstance().apply {
+                    set(year, month - 1, day, 0, 0, 0)
+                    set(Calendar.MILLISECOND, 0)
+                }
+                val intent = Intent(this@CalendarActivity, MainActivity::class.java).apply {
+                    putExtra("selected_date_millis", targetCal.timeInMillis)
+                    flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                }
                 startActivity(intent)
+                finish()
             }
         }
-    }
-}
-
-class CalendarAdapter(
-    private val cells: List<Int?>,
-    private val dayMap: Map<String, Triple<Double, Double, Double>>,
-    private val year: Int,
-    private val month: Int,
-    private val todayDay: Int,
-    private val onDayClick: (Int) -> Unit
-) : RecyclerView.Adapter<CalendarAdapter.VH>() {
-
-    class VH(view: View) : RecyclerView.ViewHolder(view)
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
-        VH(LayoutInflater.from(parent.context).inflate(R.layout.item_calendar_day, parent, false))
-
-    override fun getItemCount() = cells.size
-
-    override fun onBindViewHolder(holder: VH, position: Int) {
-        val day = cells[position]
-        val tvDay     = holder.itemView.findViewById<TextView>(R.id.tvDay)
-        val tvIncome  = holder.itemView.findViewById<TextView>(R.id.tvIncome)
-        val tvExpense = holder.itemView.findViewById<TextView>(R.id.tvExpense)
-        val tvDebt    = holder.itemView.findViewById<TextView>(R.id.tvDebt)
-
-        if (day == null) {
-            tvDay.text = ""; tvIncome.text = ""; tvExpense.text = ""; tvDebt.text = ""
-            holder.itemView.background = null
-            holder.itemView.setOnClickListener(null)
-            return
-        }
-
-        tvDay.text = day.toString()
-
-        if (day == todayDay) {
-            tvDay.setBackgroundResource(R.drawable.bg_toggle_selected)
-            tvDay.setTextColor(android.graphics.Color.WHITE)
-        } else {
-            tvDay.background = null
-            tvDay.setTextColor(holder.itemView.context.getColor(R.color.text_primary))
-        }
-
-        val key = "%04d-%02d-%02d".format(year, month, day)
-        val (inc, exp, debt) = dayMap.getOrDefault(key, Triple(0.0, 0.0, 0.0))
-
-        tvIncome.text  = if (inc  > 0) "+${inc.toInt()}"  else ""
-        tvExpense.text = if (exp  > 0) "-${exp.toInt()}"  else ""
-        tvDebt.text    = if (debt > 0) "~${debt.toInt()}" else ""
-
-        holder.itemView.setOnClickListener { onDayClick(day) }
     }
 }
