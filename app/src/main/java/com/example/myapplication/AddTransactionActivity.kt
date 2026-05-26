@@ -136,6 +136,7 @@ class AddTransactionActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        applyEnterTransition()
         setContentView(R.layout.activity_add_transaction)
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.root)) { v, insets ->
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -151,10 +152,37 @@ class AddTransactionActivity : AppCompatActivity() {
         fun selectTab(type: String) {
             val idx = when (type) { "expense" -> 0; "income" -> 1; else -> 2 }
             val goingRight = idx > flipper.displayedChild
-            flipper.inAnimation = android.view.animation.AnimationUtils.loadAnimation(
-                this, if (goingRight) R.anim.slide_in_right else R.anim.slide_in_left)
-            flipper.outAnimation = android.view.animation.AnimationUtils.loadAnimation(
-                this, if (goingRight) R.anim.slide_out_left else R.anim.slide_out_right)
+            val prefs = getSharedPreferences("settings", MODE_PRIVATE)
+            val style = prefs.getInt("transition_style", 0)
+            val dur = when (prefs.getInt("transition_speed", 1)) {
+                0 -> 150L; 2 -> 500L; 3 -> prefs.getInt("transition_custom_ms", 300).toLong(); else -> 300L
+            }
+            fun anim(resId: Int) = android.view.animation.AnimationUtils.loadAnimation(this, resId).also { it.duration = dur }
+            when (style) {
+                1 -> { // Fade
+                    flipper.inAnimation  = anim(android.R.anim.fade_in)
+                    flipper.outAnimation = anim(android.R.anim.fade_out)
+                }
+                2 -> { // Zoom
+                    flipper.inAnimation  = android.view.animation.ScaleAnimation(0.85f, 1f, 0.85f, 1f, android.view.animation.Animation.RELATIVE_TO_SELF, 0.5f, android.view.animation.Animation.RELATIVE_TO_SELF, 0.5f).also { it.duration = dur }
+                    flipper.outAnimation = android.view.animation.ScaleAnimation(1f, 0.85f, 1f, 0.85f, android.view.animation.Animation.RELATIVE_TO_SELF, 0.5f, android.view.animation.Animation.RELATIVE_TO_SELF, 0.5f).also { it.duration = dur }
+                    flipper.inAnimation.also { it.fillAfter = false }
+                }
+                3 -> { // Flip — rotate3d not available simply; use fade+scale combo
+                    flipper.inAnimation  = android.view.animation.AnimationSet(true).apply {
+                        addAnimation(anim(android.R.anim.fade_in))
+                        addAnimation(android.view.animation.ScaleAnimation(0f, 1f, 1f, 1f, android.view.animation.Animation.RELATIVE_TO_SELF, if (goingRight) 0f else 1f, android.view.animation.Animation.RELATIVE_TO_SELF, 0.5f).also { it.duration = dur })
+                    }
+                    flipper.outAnimation = android.view.animation.AnimationSet(true).apply {
+                        addAnimation(anim(android.R.anim.fade_out))
+                        addAnimation(android.view.animation.ScaleAnimation(1f, 0f, 1f, 1f, android.view.animation.Animation.RELATIVE_TO_SELF, if (goingRight) 1f else 0f, android.view.animation.Animation.RELATIVE_TO_SELF, 0.5f).also { it.duration = dur })
+                    }
+                }
+                else -> { // Slide (default)
+                    flipper.inAnimation  = anim(if (goingRight) R.anim.slide_in_right else R.anim.slide_in_left)
+                    flipper.outAnimation = anim(if (goingRight) R.anim.slide_out_left else R.anim.slide_out_right)
+                }
+            }
             flipper.displayedChild = idx
             btnExpense.background = if (type == "expense") selBg else transBg
             btnIncome.background = if (type == "income") selBg else transBg
@@ -169,6 +197,22 @@ class AddTransactionActivity : AppCompatActivity() {
         btnExpense.setOnClickListener { selectTab("expense") }
         btnIncome.setOnClickListener { selectTab("income") }
         btnDebt.setOnClickListener { selectTab("debt") }
+
+        val tabs = listOf("expense", "income", "debt")
+        val gestureDetector = android.view.GestureDetector(this, object : android.view.GestureDetector.SimpleOnGestureListener() {
+            override fun onFling(e1: android.view.MotionEvent?, e2: android.view.MotionEvent, vX: Float, vY: Float): Boolean {
+                if (Math.abs(vX) < Math.abs(vY) * 1.5f) return false // ignore mostly-vertical flings
+                val cur = flipper.displayedChild
+                if (vX < -500f && cur < tabs.size - 1) { selectTab(tabs[cur + 1]); return true }
+                if (vX >  500f && cur > 0)             { selectTab(tabs[cur - 1]); return true }
+                return false
+            }
+            override fun onDown(e: android.view.MotionEvent) = true
+        })
+        findViewById<android.view.View>(R.id.root).setOnTouchListener { _, event ->
+            gestureDetector.onTouchEvent(event)
+            false // don't consume — let scrollviews still work
+        }
 
         val btnToGive = findViewById<AppCompatButton>(R.id.btnToGive)
         val btnToGet = findViewById<AppCompatButton>(R.id.btnToGet)
@@ -329,7 +373,68 @@ class AddTransactionActivity : AppCompatActivity() {
 
     override fun finish() {
         super.finish()
-        overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+            // returnTransition set in applyEnterTransition() handles this
+            overridePendingTransition(0, 0)
+            return
+        }
+        val prefs = getSharedPreferences("settings", MODE_PRIVATE)
+        val style = prefs.getInt("transition_style", 0)
+        val dir   = prefs.getInt("slide_direction", 0)
+        when (style) {
+            0 -> when (dir) {
+                1 -> overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+                2 -> overridePendingTransition(R.anim.slide_in_top, R.anim.slide_out_bottom)
+                3 -> overridePendingTransition(R.anim.slide_in_bottom, R.anim.slide_out_top)
+                else -> overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
+            }
+            1, 2 -> overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+            else -> overridePendingTransition(0, 0)
+        }
+    }
+
+    private fun applyEnterTransition() {
+        val prefs = getSharedPreferences("settings", MODE_PRIVATE)
+        val style = prefs.getInt("transition_style", 0)
+        val dir   = prefs.getInt("slide_direction", 0)
+        val dur   = when (prefs.getInt("transition_speed", 1)) {
+            0 -> 150L; 2 -> 500L; 3 -> prefs.getInt("transition_custom_ms", 300).toLong(); else -> 300L
+        }
+        val interp: android.view.animation.Interpolator = when (prefs.getInt("transition_interpolator", 2)) {
+            0 -> android.view.animation.LinearInterpolator()
+            1 -> android.view.animation.AccelerateInterpolator()
+            3 -> android.view.animation.AccelerateDecelerateInterpolator()
+            4 -> android.view.animation.OvershootInterpolator()
+            else -> android.view.animation.DecelerateInterpolator()
+        }
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+            val enter: android.transition.Transition = when (style) {
+                1, 3 -> android.transition.Fade()
+                2 -> android.transition.Explode()
+                0 -> android.transition.Slide(when (dir) {
+                    1 -> android.view.Gravity.START
+                    2 -> android.view.Gravity.BOTTOM
+                    3 -> android.view.Gravity.TOP
+                    else -> android.view.Gravity.END
+                })
+                else -> android.transition.Fade()
+            }
+            enter.duration = dur; enter.interpolator = interp
+            window.enterTransition = enter
+            val exit: android.transition.Transition = when (style) {
+                1, 3 -> android.transition.Fade()
+                2 -> android.transition.Explode()
+                0 -> android.transition.Slide(when (dir) {
+                    1 -> android.view.Gravity.END
+                    2 -> android.view.Gravity.TOP
+                    3 -> android.view.Gravity.BOTTOM
+                    else -> android.view.Gravity.START
+                })
+                else -> android.transition.Fade()
+            }
+            exit.duration = dur; exit.interpolator = interp
+            window.returnTransition = exit
+        }
     }
 
     private fun pickDateTime() {
