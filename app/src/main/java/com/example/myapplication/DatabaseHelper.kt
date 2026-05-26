@@ -103,6 +103,20 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, "transactions
         writableDatabase.delete("transactions", "id = ?", arrayOf(id.toString()))
     }
 
+    fun updateTransaction(transaction: Transaction) {
+        val values = ContentValues().apply {
+            put("title", transaction.title)
+            put("type", transaction.type)
+            put("amount", transaction.amount)
+            put("category", transaction.category)
+            put("account", transaction.account)
+            put("note", transaction.note)
+            put("description", transaction.description)
+            put("date", transaction.date)
+        }
+        writableDatabase.update("transactions", values, "id = ?", arrayOf(transaction.id.toString()))
+    }
+
     fun toggleStar(id: Long, starred: Boolean) {
         val values = ContentValues().apply { put("isStarred", if (starred) 1 else 0) }
         writableDatabase.update("transactions", values, "id = ?", arrayOf(id.toString()))

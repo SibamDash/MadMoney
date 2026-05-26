@@ -212,6 +212,39 @@ class AddTransactionActivity : AppCompatActivity() {
         findViewById<ImageView>(R.id.btnBack).setOnClickListener { finish() }
         selectedDateMillis = intent.getLongExtra("selected_date_millis", System.currentTimeMillis())
         selectTab("expense")
+
+        // Pre-fill for editing
+        val editId = intent.getLongExtra("edit_id", -1L)
+        if (editId != -1L) {
+            val type = intent.getStringExtra("edit_type") ?: "expense"
+            val category = intent.getStringExtra("edit_category") ?: ""
+            val amount = intent.getDoubleExtra("edit_amount", 0.0)
+            val note = intent.getStringExtra("edit_note") ?: ""
+            selectedDateMillis = intent.getLongExtra("edit_date", System.currentTimeMillis())
+            selectTab(type)
+            if (type == "togive" || type == "toget") selectDebtType(type)
+            val child = currentChild()
+            child.findViewById<EditText>(R.id.etAmount)?.setText(amount.toInt().toString())
+            when (type) {
+                "income" -> {
+                    child.findViewById<TextView>(R.id.etIncomeSource)?.text = category
+                    child.findViewById<EditText>(R.id.etIncomeNote)?.setText(note)
+                }
+                "togive", "toget" -> {
+                    child.findViewById<EditText>(R.id.etDebtPerson)?.setText(intent.getStringExtra("edit_title") ?: "")
+                    child.findViewById<EditText>(R.id.etDebtNote)?.setText(note)
+                }
+                else -> {
+                    child.findViewById<TextView>(R.id.etExpenseCategory)?.text = category
+                    child.findViewById<EditText>(R.id.etExpenseNote)?.setText(note)
+                }
+            }
+            // Hide "Add Another" button when editing
+            for (i in 0 until flipper.childCount) {
+                flipper.getChildAt(i).findViewById<AppCompatButton>(R.id.btnContinue)?.visibility = View.GONE
+            }
+            updateAllDates()
+        }
     }
 
     private fun showCategorySheet(tvCategory: TextView, type: String = "expense") {
@@ -348,11 +381,21 @@ class AddTransactionActivity : AppCompatActivity() {
             }
         }
 
-        DatabaseHelper(this).addTransaction(Transaction(
-            title = title, category = category,
-            amount = amountText.toDouble(), type = selectedType,
-            note = note, date = selectedDateMillis
-        ))
+        val db = DatabaseHelper(this)
+        val editId = intent.getLongExtra("edit_id", -1L)
+        if (editId != -1L) {
+            db.updateTransaction(Transaction(
+                id = editId, title = title, category = category,
+                amount = amountText.toDouble(), type = selectedType,
+                note = note, date = selectedDateMillis
+            ))
+        } else {
+            db.addTransaction(Transaction(
+                title = title, category = category,
+                amount = amountText.toDouble(), type = selectedType,
+                note = note, date = selectedDateMillis
+            ))
+        }
         Toast.makeText(this, "Saved!", Toast.LENGTH_SHORT).show()
 
         if (andContinue) {

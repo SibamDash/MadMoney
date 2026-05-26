@@ -48,6 +48,34 @@ class DailyFragment : Fragment() {
             },
             onStarToggle = { t, starred ->
                 DatabaseHelper(requireContext()).toggleStar(t.id, starred); load()
+            },
+            onLongClick = { t, which ->
+                when (which) {
+                    0 -> startActivity(
+                        Intent(requireContext(), AddTransactionActivity::class.java).apply {
+                            putExtra("edit_id", t.id)
+                            putExtra("edit_title", t.title)
+                            putExtra("edit_category", t.category)
+                            putExtra("edit_amount", t.amount)
+                            putExtra("edit_type", t.type)
+                            putExtra("edit_note", t.note)
+                            putExtra("edit_date", t.date)
+                        }
+                    )
+                    1 -> androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                        .setTitle("Delete Transaction")
+                        .setMessage("Delete \"${t.title}\"?")
+                        .setPositiveButton("Delete") { _, _ ->
+                            DatabaseHelper(requireContext()).deleteTransaction(t.id)
+                            load()
+                            com.google.android.material.snackbar.Snackbar.make(
+                                requireActivity().findViewById(R.id.main), "${t.title} deleted", 5000
+                            ).setAction("Undo") {
+                                DatabaseHelper(requireContext()).addTransaction(t); load()
+                            }.show()
+                        }
+                        .setNegativeButton("Cancel", null).show()
+                }
             }
         )
         (view as RecyclerView).adapter = adapter

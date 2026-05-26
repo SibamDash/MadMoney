@@ -112,10 +112,10 @@
                 <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/divider"/>
 
                 <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                    android:text="Note (optional)" android:textColor="@color/text_secondary" android:textSize="13sp" android:layout_marginTop="16dp"/>
+                    android:text="Title" android:textColor="@color/text_secondary" android:textSize="13sp" android:layout_marginTop="16dp"/>
                 <EditText android:id="@+id/etExpenseNote"
                     android:layout_width="match_parent" android:layout_height="wrap_content"
-                    android:hint="Add a note..." android:textColor="@color/text_primary"
+                    android:hint="Enter title..." android:textColor="@color/text_primary"
                     android:textColorHint="@color/text_hint"
                     android:background="@android:color/transparent" android:paddingVertical="10dp"/>
                 <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/divider"/>
@@ -149,10 +149,10 @@
                 <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/divider"/>
 
                 <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                    android:text="Note (optional)" android:textColor="@color/text_secondary" android:textSize="13sp" android:layout_marginTop="16dp"/>
+                    android:text="Title" android:textColor="@color/text_secondary" android:textSize="13sp" android:layout_marginTop="16dp"/>
                 <EditText android:id="@+id/etIncomeNote"
                     android:layout_width="match_parent" android:layout_height="wrap_content"
-                    android:hint="Add a note..." android:textColor="@color/text_primary"
+                    android:hint="Enter title..." android:textColor="@color/text_primary"
                     android:textColorHint="@color/text_hint"
                     android:background="@android:color/transparent" android:paddingVertical="10dp"/>
                 <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/divider"/>
@@ -210,10 +210,10 @@
                 </LinearLayout>
 
                 <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                    android:text="Note (optional)" android:textColor="@color/text_secondary" android:textSize="13sp" android:layout_marginTop="16dp"/>
+                    android:text="Title" android:textColor="@color/text_secondary" android:textSize="13sp" android:layout_marginTop="16dp"/>
                 <EditText android:id="@+id/etDebtNote"
                     android:layout_width="match_parent" android:layout_height="wrap_content"
-                    android:hint="Add a note..." android:textColor="@color/text_primary"
+                    android:hint="Enter title..." android:textColor="@color/text_primary"
                     android:textColorHint="@color/text_hint"
                     android:background="@android:color/transparent" android:paddingVertical="10dp"/>
                 <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/divider"/>

@@ -78,12 +78,13 @@ class MainActivity : AppCompatActivity() {
                 dailyFragment,
                 CalendarFragment(),
                 ChartFragment(),
-                PlaceholderFragment("Budget"),
+                BudgetFragment(),
                 PlaceholderFragment("Total")
             )
             override fun getItemCount() = fragments.size
             override fun createFragment(position: Int) = fragments[position]
         }
+        viewPager.offscreenPageLimit = 4
         viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
                 // Clear day filter when user manually navigates away from Daily and back
@@ -245,10 +246,6 @@ class MainActivity : AppCompatActivity() {
         val prefs = getSharedPreferences("settings", MODE_PRIVATE)
         val switchDarkMode = findViewById<SwitchCompat>(R.id.switchDarkMode)
         switchDarkMode.isChecked = prefs.getBoolean("dark_mode", false)
-        switchDarkMode.setOnCheckedChangeListener { _, isChecked ->
-            prefs.edit().putBoolean("dark_mode", isChecked).apply()
-            AppCompatDelegate.setDefaultNightMode(if (isChecked) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO)
-        }
 
         findViewById<TextView>(R.id.optionTransitions).setOnClickListener { Toast.makeText(this, "Transitions", Toast.LENGTH_SHORT).show(); drawer.closeDrawer(Gravity.END) }
         findViewById<TextView>(R.id.optionPosition).setOnClickListener { Toast.makeText(this, "Position", Toast.LENGTH_SHORT).show(); drawer.closeDrawer(Gravity.END) }
@@ -262,6 +259,73 @@ class MainActivity : AppCompatActivity() {
         }
         findViewById<TextView>(R.id.optionImport).setOnClickListener {
             drawer.closeDrawer(Gravity.END); importLauncher.launch(arrayOf("application/json", "*/*"))
+        }
+
+        // Budget settings
+        findViewById<LinearLayout>(R.id.headerBudget).setOnClickListener {
+            toggleSection(findViewById(R.id.contentBudget), findViewById(R.id.arrowBudget))
+        }
+
+        val switchMonthly = findViewById<SwitchCompat>(R.id.switchBudgetMonthly)
+        val switchCustom = findViewById<SwitchCompat>(R.id.switchBudgetCustom)
+        val layoutCustomPeriod = findViewById<LinearLayout>(R.id.layoutCustomPeriod)
+        val arrowBudgetCustom = findViewById<TextView>(R.id.arrowBudgetCustom)
+
+        switchMonthly.isChecked = prefs.getBoolean("budget_monthly_enabled", true)
+        switchCustom.isChecked = prefs.getBoolean("budget_custom_enabled", false)
+        layoutCustomPeriod.visibility = if (switchCustom.isChecked) View.VISIBLE else View.GONE
+        arrowBudgetCustom.text = if (switchCustom.isChecked) "▼" else "▶"
+
+        val etYears  = findViewById<android.widget.EditText>(R.id.etCustomYears)
+        val etMonths = findViewById<android.widget.EditText>(R.id.etCustomMonths)
+        val etWeeks  = findViewById<android.widget.EditText>(R.id.etCustomWeeks)
+        val etDays   = findViewById<android.widget.EditText>(R.id.etCustomDays)
+        val etCustomName = findViewById<android.widget.EditText>(R.id.etCustomName)
+        val etCustomBudgetAmount = findViewById<android.widget.EditText>(R.id.etCustomBudgetAmount)
+        prefs.getInt("budget_custom_years", 0).let  { if (it > 0) etYears.setText(it.toString()) }
+        prefs.getInt("budget_custom_months", 0).let { if (it > 0) etMonths.setText(it.toString()) }
+        prefs.getInt("budget_custom_weeks", 0).let  { if (it > 0) etWeeks.setText(it.toString()) }
+        prefs.getInt("budget_custom_days", 0).let   { if (it > 0) etDays.setText(it.toString()) }
+        prefs.getString("budget_custom_name", "")?.let { if (it.isNotEmpty()) etCustomName.setText(it) }
+        getSharedPreferences("budget", MODE_PRIVATE).getFloat("custom_limit", 0f)
+            .let { if (it > 0) etCustomBudgetAmount.setText(it.toInt().toString()) }
+
+        // Toggle sub-dropdown on arrow/row click
+        findViewById<LinearLayout>(R.id.rowBudgetCustom).setOnClickListener {
+            val open = layoutCustomPeriod.visibility == View.VISIBLE
+            layoutCustomPeriod.visibility = if (open) View.GONE else View.VISIBLE
+            arrowBudgetCustom.text = if (open) "▶" else "▼"
+        }
+
+        // Show/hide custom period fields immediately when toggled (UI only, not saved yet)
+        switchCustom.setOnCheckedChangeListener { _, checked ->
+            layoutCustomPeriod.visibility = if (checked) View.VISIBLE else View.GONE
+            arrowBudgetCustom.text = if (checked) "▼" else "▶"
+        }
+
+        // Save button — commit all settings at once and apply
+        findViewById<android.widget.Button>(R.id.btnSaveSettings).setOnClickListener {
+            prefs.edit()
+                .putBoolean("dark_mode", switchDarkMode.isChecked)
+                .putBoolean("budget_monthly_enabled", switchMonthly.isChecked)
+                .putBoolean("budget_custom_enabled", switchCustom.isChecked)
+                .putString("budget_custom_name", etCustomName.text.toString().trim())
+                .putInt("budget_custom_years",  etYears.text.toString().toIntOrNull() ?: 0)
+                .putInt("budget_custom_months", etMonths.text.toString().toIntOrNull() ?: 0)
+                .putInt("budget_custom_weeks",  etWeeks.text.toString().toIntOrNull() ?: 0)
+                .putInt("budget_custom_days",   etDays.text.toString().toIntOrNull() ?: 0)
+                .apply()
+            etCustomBudgetAmount.text.toString().toFloatOrNull()?.let {
+                getSharedPreferences("budget", MODE_PRIVATE).edit().putFloat("custom_limit", it).apply()
+            }
+            AppCompatDelegate.setDefaultNightMode(
+                if (switchDarkMode.isChecked) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
+            )
+            // Refresh BudgetFragment visibility immediately
+            (supportFragmentManager.findFragmentByTag("f3") as? BudgetFragment)
+                ?.let { frag -> frag.view?.let { v -> frag.applySettingsVisibility(v, prefs); frag.refreshCustomFromSettings(v) } }
+            drawer.closeDrawer(Gravity.END)
+            Toast.makeText(this, "Settings saved", Toast.LENGTH_SHORT).show()
         }
     }
 }
