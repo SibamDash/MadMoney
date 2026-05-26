@@ -14,7 +14,8 @@ class DailyFragment : Fragment() {
     private lateinit var adapter: GroupedTransactionAdapter
     private var activeFilter: String = "all"
     private var searchQuery: String = ""
-    private var selectedDate: Triple<Int,Int,Int>? = null  // year, month(0-based), day
+    private var searchField: String = "all"
+    private var selectedDate: Triple<Int,Int,Int>? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val rv = RecyclerView(requireContext()).apply {
@@ -59,6 +60,7 @@ class DailyFragment : Fragment() {
 
     fun setFilter(filter: String) { activeFilter = filter; if (isAdded) load() }
     fun setSearch(query: String) { searchQuery = query; if (isAdded) load() }
+    fun setSearchField(field: String) { searchField = field; if (isAdded) load() }
     fun setDateFilter(year: Int, month: Int, day: Int) { selectedDate = Triple(year, month, day); if (isAdded) load() }
     fun clearDateFilter() { selectedDate = null; if (isAdded) load() }
 
@@ -83,9 +85,19 @@ class DailyFragment : Fragment() {
             else      -> all
         }
         val q = searchQuery.trim().lowercase()
-        if (q.isNotEmpty()) filtered = filtered.filter {
-            it.title.lowercase().contains(q) || it.category.lowercase().contains(q) ||
-            it.note.lowercase().contains(q)  || it.amount.toString().contains(q)
+        if (q.isNotEmpty()) {
+            val dateFmt = java.text.SimpleDateFormat("d MMM yyyy", java.util.Locale.getDefault())
+            filtered = filtered.filter { t ->
+                when (searchField) {
+                    "name"     -> t.title.lowercase().contains(q)
+                    "category" -> t.category.lowercase().contains(q)
+                    "amount"   -> t.amount.toString().contains(q)
+                    "date"     -> dateFmt.format(java.util.Date(t.date)).lowercase().contains(q)
+                    else       -> t.title.lowercase().contains(q) || t.category.lowercase().contains(q) ||
+                                  t.note.lowercase().contains(q)  || t.amount.toString().contains(q) ||
+                                  dateFmt.format(java.util.Date(t.date)).lowercase().contains(q)
+                }
+            }
         }
         adapter.submitList(filtered)
 

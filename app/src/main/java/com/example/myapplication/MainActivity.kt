@@ -8,7 +8,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
-import android.widget.SearchView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
@@ -129,11 +128,12 @@ class MainActivity : AppCompatActivity() {
     @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
         val drawer = findViewById<DrawerLayout>(R.id.drawerLayout)
-        val searchView = findViewById<SearchView>(R.id.searchView)
+        val searchContainer = findViewById<View>(R.id.searchView)
         when {
             drawer.isDrawerOpen(Gravity.END) -> drawer.closeDrawer(Gravity.END)
-            searchView.visibility == View.VISIBLE -> {
-                searchView.visibility = View.GONE; searchView.setQuery("", false)
+            searchContainer.visibility == View.VISIBLE -> {
+                searchContainer.visibility = View.GONE
+                findViewById<android.widget.SearchView>(R.id.searchInput).setQuery("", false)
                 dailyFragment.setSearch("")
             }
             System.currentTimeMillis() - backPressedTime < 2000 -> super.onBackPressed()
@@ -142,20 +142,39 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupSearch() {
-        val searchView = findViewById<SearchView>(R.id.searchView)
-        val ivSearch = findViewById<android.widget.ImageView>(R.id.ivSearch)
-        ivSearch.setOnClickListener {
-            if (searchView.visibility == View.GONE) {
-                searchView.visibility = View.VISIBLE; searchView.isIconified = false; searchView.requestFocus()
-            } else {
-                searchView.visibility = View.GONE; searchView.setQuery("", false); dailyFragment.setSearch("")
+        val searchContainer = findViewById<View>(R.id.searchView)
+        val searchInput     = findViewById<android.widget.SearchView>(R.id.searchInput)
+        val spinner         = findViewById<android.widget.Spinner>(R.id.spinnerSearchBy)
+        val ivSearch        = findViewById<android.widget.ImageView>(R.id.ivSearch)
+
+        val fields = listOf("All", "Name", "Category", "Amount", "Date")
+        spinner.adapter = android.widget.ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, fields)
+        spinner.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(p: android.widget.AdapterView<*>?, v: View?, pos: Int, id: Long) {
+                dailyFragment.setSearchField(fields[pos].lowercase())
             }
+            override fun onNothingSelected(p: android.widget.AdapterView<*>?) {}
         }
-        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+
+        fun openSearch() {
+            searchContainer.visibility = View.VISIBLE
+            searchInput.isIconified = false
+            searchInput.requestFocus()
+        }
+        fun closeSearch() {
+            searchContainer.visibility = View.GONE
+            searchInput.setQuery("", false)
+            spinner.setSelection(0)
+            dailyFragment.setSearch("")
+            dailyFragment.setSearchField("all")
+        }
+
+        ivSearch.setOnClickListener { if (searchContainer.visibility == View.GONE) openSearch() else closeSearch() }
+        searchInput.setOnQueryTextListener(object : android.widget.SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(q: String?) = false
             override fun onQueryTextChange(q: String?): Boolean { dailyFragment.setSearch(q ?: ""); return true }
         })
-        searchView.setOnCloseListener { searchView.visibility = View.GONE; dailyFragment.setSearch(""); false }
+        searchInput.setOnCloseListener { closeSearch(); false }
     }
 
     private fun setupBottomNavigation() {
