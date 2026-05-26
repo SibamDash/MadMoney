@@ -14,6 +14,10 @@ class PieChartView @JvmOverloads constructor(
     private var centerLabel = ""
 
     private val slicePaint  = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
+    private val strokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+        strokeWidth = 3f
+    }
     private val holePaint   = Paint(Paint.ANTI_ALIAS_FLAG)
     private val labelPaint  = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         textAlign = Paint.Align.CENTER
@@ -38,6 +42,7 @@ class PieChartView @JvmOverloads constructor(
         holePaint.color   = ContextCompat.getColor(context, R.color.background)
         labelPaint.color  = ContextCompat.getColor(context, R.color.text_primary)
         subLabelPaint.color = ContextCompat.getColor(context, R.color.text_secondary)
+        strokePaint.color = ContextCompat.getColor(context, R.color.background)
 
         val size    = minOf(width, height).toFloat()
         val margin  = size * 0.04f
@@ -51,6 +56,7 @@ class PieChartView @JvmOverloads constructor(
         for ((sweep, color) in slices) {
             slicePaint.color = color
             canvas.drawArc(oval, startAngle, sweep, true, slicePaint)
+            canvas.drawArc(oval, startAngle, sweep, true, strokePaint)
             startAngle += sweep
         }
 

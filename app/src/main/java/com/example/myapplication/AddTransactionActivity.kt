@@ -201,7 +201,7 @@ class AddTransactionActivity : AppCompatActivity() {
         val tabs = listOf("expense", "income", "debt")
         val gestureDetector = android.view.GestureDetector(this, object : android.view.GestureDetector.SimpleOnGestureListener() {
             override fun onFling(e1: android.view.MotionEvent?, e2: android.view.MotionEvent, vX: Float, vY: Float): Boolean {
-                if (Math.abs(vX) < Math.abs(vY) * 1.5f) return false // ignore mostly-vertical flings
+                if (Math.abs(vX) < Math.abs(vY)) return false
                 val cur = flipper.displayedChild
                 if (vX < -500f && cur < tabs.size - 1) { selectTab(tabs[cur + 1]); return true }
                 if (vX >  500f && cur > 0)             { selectTab(tabs[cur - 1]); return true }
@@ -209,9 +209,20 @@ class AddTransactionActivity : AppCompatActivity() {
             }
             override fun onDown(e: android.view.MotionEvent) = true
         })
-        findViewById<android.view.View>(R.id.root).setOnTouchListener { _, event ->
+        flipper.setOnTouchListener { v, event ->
+            if (event.action == android.view.MotionEvent.ACTION_DOWN)
+                v.parent?.requestDisallowInterceptTouchEvent(true)
             gestureDetector.onTouchEvent(event)
-            false // don't consume — let scrollviews still work
+            true
+        }
+        // Forward touches from each ScrollView child up to the flipper's gesture detector
+        for (i in 0 until flipper.childCount) {
+            flipper.getChildAt(i)?.setOnTouchListener { _, event ->
+                if (event.action == android.view.MotionEvent.ACTION_DOWN)
+                    flipper.parent?.requestDisallowInterceptTouchEvent(true)
+                gestureDetector.onTouchEvent(event)
+                false // let ScrollView still handle vertical scroll
+            }
         }
 
         val btnToGive = findViewById<AppCompatButton>(R.id.btnToGive)

@@ -15,14 +15,14 @@ import java.util.Calendar
 class ChartFragment : Fragment() {
 
     private val expensePalette = listOf(
-        "#F44336", "#E91E63", "#9C27B0", "#3F51B5",
-        "#2196F3", "#009688", "#FF9800", "#795548",
-        "#607D8B", "#FF5722", "#00BCD4"
+        "#F44336", "#FF6D00", "#FFD600", "#00C853",
+        "#00B0FF", "#651FFF", "#F50057", "#00BFA5",
+        "#FF6F00", "#1565C0", "#6A1B9A", "#2E7D32"
     )
     private val incomePalette = listOf(
-        "#4CAF50", "#66BB6A", "#81C784", "#388E3C",
-        "#00C853", "#1B5E20", "#A5D6A7", "#2E7D32",
-        "#43A047", "#00E676", "#69F0AE"
+        "#00C853", "#00B0FF", "#651FFF", "#FFD600",
+        "#F44336", "#FF6D00", "#00BFA5", "#F50057",
+        "#1565C0", "#FF6F00", "#6A1B9A", "#2E7D32"
     )
 
     private var selectedType = "expense"

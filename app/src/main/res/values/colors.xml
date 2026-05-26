@@ -5,8 +5,8 @@
     <color name="orange_primary">#FF5252</color>
 
     <!-- Transaction Colors -->
-    <color name="color_expense">#FF5252</color>
-    <color name="color_income">#4CAF50</color>
+    <color name="color_expense">#F44336</color>
+    <color name="color_income">#00C853</color>
     <color name="color_to_give">#2196F3</color>
     <color name="color_to_get">#9C27B0</color>
 

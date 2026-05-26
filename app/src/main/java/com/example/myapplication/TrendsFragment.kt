@@ -66,6 +66,7 @@ class TrendsFragment : Fragment() {
     override fun onResume() { super.onResume(); view?.let { load(it) } }
 
     private fun pickDate(view: View, isFrom: Boolean) {
+        if (!isVisible) return
         val cal = Calendar.getInstance()
         DatePickerDialog(requireContext(), { _, y, m, d ->
             val picked = Calendar.getInstance().apply { set(y, m, d) }
