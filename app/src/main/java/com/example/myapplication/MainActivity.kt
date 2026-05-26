@@ -21,7 +21,6 @@ import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
-import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
@@ -99,7 +98,6 @@ class MainActivity : AppCompatActivity() {
         }.attach()
 
         setupSearch()
-        setupBottomNavigation()
         setupSettings()
 
         findViewById<FloatingActionButton>(R.id.fabAdd).setOnClickListener {
@@ -178,26 +176,6 @@ class MainActivity : AppCompatActivity() {
         searchInput.setOnCloseListener { closeSearch(); false }
     }
 
-    private fun setupBottomNavigation() {
-        val nav = findViewById<BottomNavigationView>(R.id.bottomNav)
-        fun scale(selectedId: Int) {
-            for (i in 0 until nav.menu.size()) {
-                val item = nav.menu.getItem(i)
-                val s = if (item.itemId == selectedId) 1.0f else 20f/24f
-                nav.findViewById<View>(item.itemId)?.animate()?.scaleX(s)?.scaleY(s)?.setDuration(150)?.start()
-            }
-        }
-        nav.setOnItemSelectedListener { item ->
-            dailyFragment.setFilter(when (item.itemId) {
-                R.id.nav_income  -> "expense"
-                R.id.nav_expense -> "income"
-                R.id.nav_debts   -> "debts"
-                else             -> "all"
-            })
-            scale(item.itemId); true
-        }
-        nav.post { scale(nav.selectedItemId) }
-    }
 
     private fun setupSettings() {
         val drawer = findViewById<DrawerLayout>(R.id.drawerLayout)

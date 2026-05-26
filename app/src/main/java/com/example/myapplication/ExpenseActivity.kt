@@ -15,7 +15,6 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import java.text.SimpleDateFormat
 import java.util.*
@@ -55,7 +54,6 @@ class ExpenseActivity : AppCompatActivity() {
 
         setupMonthNavigation()
         setupSearch()
-        setupBottomNavigation()
 
         findViewById<FloatingActionButton>(R.id.fabAdd).setOnClickListener {
             val intent = Intent(this, AddTransactionActivity::class.java)
@@ -184,39 +182,6 @@ class ExpenseActivity : AppCompatActivity() {
             val s = (calendar.clone() as Calendar).apply { set(Calendar.DAY_OF_MONTH, 1); set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0); set(Calendar.SECOND, 0) }
             val e = (calendar.clone() as Calendar).apply { set(Calendar.DAY_OF_MONTH, getActualMaximum(Calendar.DAY_OF_MONTH)); set(Calendar.HOUR_OF_DAY, 23); set(Calendar.MINUTE, 59); set(Calendar.SECOND, 59) }
             Pair(s.timeInMillis, e.timeInMillis)
-        }
-    }
-
-    private fun setupBottomNavigation() {
-        val navView = findViewById<BottomNavigationView>(R.id.bottomNav)
-        navView.selectedItemId = when (filterTypes.firstOrNull()) {
-            "income" -> R.id.nav_expense
-            "togive", "toget" -> R.id.nav_debts
-            else -> R.id.nav_income
-        }
-        navView.setOnItemSelectedListener { item ->
-            when (item.itemId) {
-                R.id.nav_all -> { startActivity(Intent(this, MainActivity::class.java)); finish(); true }
-                R.id.nav_income -> {
-                    if ("expense" !in filterTypes) {
-                        startActivity(intentFor("expense", "Expenses", R.id.nav_income)); finish()
-                    }
-                    true
-                }
-                R.id.nav_expense -> {
-                    if ("income" !in filterTypes) {
-                        startActivity(intentFor("income", "Income", R.id.nav_expense)); finish()
-                    }
-                    true
-                }
-                R.id.nav_debts -> {
-                    if ("togive" !in filterTypes) {
-                        startActivity(intentForDebts()); finish()
-                    }
-                    true
-                }
-                else -> false
-            }
         }
     }
 
