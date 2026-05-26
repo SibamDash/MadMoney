@@ -5,8 +5,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.recyclerview.widget.RecyclerView
 import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.RecyclerView
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -17,9 +17,10 @@ class TransactionAdapter(
     private val onStarToggle: (Transaction, Boolean) -> Unit
 ) : RecyclerView.Adapter<TransactionAdapter.ViewHolder>() {
 
+    private val settledFmt = SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.getDefault())
+
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val iconContainer: View = view.findViewById(R.id.iconContainer)
-        val ivIcon: ImageView = view.findViewById(R.id.ivCategoryIcon)
         val tvTitle: TextView = view.findViewById(R.id.tvTitle)
         val tvSubtitle: TextView = view.findViewById(R.id.tvSubtitle)
         val tvSettledAt: TextView = view.findViewById(R.id.tvSettledAt)
@@ -31,19 +32,17 @@ class TransactionAdapter(
         val cardView: View = view.findViewById(R.id.cardView)
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_transaction, parent, false)
-        return ViewHolder(view)
-    }
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
+        ViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.item_transaction, parent, false))
+
+    override fun getItemCount() = transactions.size
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = transactions[position]
+        val ctx = holder.itemView.context
         holder.tvTitle.text = item.title
         holder.tvAmount.text = "₹${item.amount.toInt()}"
 
-        val ctx = holder.itemView.context
-        val settledFmt = SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.getDefault())
         when (item.type.lowercase()) {
             "income" -> {
                 holder.tvSubtitle.text = "Income • Received"
@@ -81,38 +80,17 @@ class TransactionAdapter(
             }
         }
 
-        // Star state
-        if (item.isStarred) {
-            holder.ivStar.setImageResource(R.drawable.ic_star_filled)
-            holder.ivStar.setColorFilter(ContextCompat.getColor(ctx, R.color.text_primary))
-            holder.ivStar.visibility = View.VISIBLE
-        } else {
-            holder.ivStar.visibility = View.GONE
-        }
+        holder.ivStar.visibility = if (item.isStarred) View.VISIBLE else View.GONE
 
-        // Double-tap on card to toggle star
         holder.cardView.setOnClickListener(object : View.OnClickListener {
             private var lastClick = 0L
             override fun onClick(v: View) {
                 val now = System.currentTimeMillis()
-                if (now - lastClick < 300) {
-                    val newStarred = !item.isStarred
-                    if (newStarred) {
-                        holder.ivStar.setImageResource(R.drawable.ic_star_filled)
-                        holder.ivStar.setColorFilter(ContextCompat.getColor(v.context, R.color.text_primary))
-                        holder.ivStar.visibility = View.VISIBLE
-                    } else {
-                        holder.ivStar.visibility = View.GONE
-                    }
-                    onStarToggle(item, newStarred)
-                }
+                if (now - lastClick < 300) onStarToggle(item, !item.isStarred)
                 lastClick = now
             }
         })
-
         holder.btnCheck.setOnClickListener { onCheckClick(item) }
         holder.btnCross.setOnClickListener { onCrossClick(item) }
     }
-
-    override fun getItemCount() = transactions.size
 }

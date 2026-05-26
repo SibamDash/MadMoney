@@ -26,6 +26,7 @@ object BackupManager {
                 put("description", t.description)
                 put("date", t.date)
                 put("isCompleted", t.isCompleted)
+                put("isStarred", t.isStarred)
             })
         }
         context.contentResolver.openOutputStream(uri)?.use { it.write(array.toString(2).toByteArray()) }
@@ -51,7 +52,8 @@ object BackupManager {
                 note = o.optString("note", ""),
                 description = o.optString("description", ""),
                 date = o.getLong("date"),
-                isCompleted = o.optBoolean("isCompleted", false)
+                isCompleted = o.optBoolean("isCompleted", false),
+                isStarred   = o.optBoolean("isStarred", false)
             ))
             count++
         }

@@ -16,6 +16,7 @@ class DailyFragment : Fragment() {
     private var searchQuery: String = ""
     private var searchField: String = "all"
     private var selectedDate: Triple<Int,Int,Int>? = null
+    private val dateFmt = java.text.SimpleDateFormat("d MMM yyyy", java.util.Locale.getDefault())
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val rv = RecyclerView(requireContext()).apply {
@@ -114,7 +115,6 @@ class DailyFragment : Fragment() {
         }
         val q = searchQuery.trim().lowercase()
         if (q.isNotEmpty()) {
-            val dateFmt = java.text.SimpleDateFormat("d MMM yyyy", java.util.Locale.getDefault())
             filtered = filtered.filter { t ->
                 when (searchField) {
                     "name"     -> t.title.lowercase().contains(q)

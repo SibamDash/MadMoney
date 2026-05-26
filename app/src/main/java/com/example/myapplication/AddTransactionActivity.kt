@@ -91,8 +91,6 @@ class AddTransactionActivity : AppCompatActivity() {
         }
     }
 
-    private fun saveCroppedImage(uri: Uri, index: Int) = saveCroppedImageKeyed(uri, index, "cat_icons")
-
     private fun getCategoryIconPath(index: Int, prefsKey: String = "cat_icons"): String? =
         getSharedPreferences(prefsKey, Context.MODE_PRIVATE).getString("icon_$index", null)
 

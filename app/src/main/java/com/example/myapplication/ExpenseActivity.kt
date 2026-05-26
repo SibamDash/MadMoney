@@ -28,7 +28,7 @@ class ExpenseActivity : AppCompatActivity() {
     private lateinit var filterTypes: List<String>
     private lateinit var sectionTitle: String
     private val allTransactions = mutableListOf<Transaction>()
-    private val displayRows = mutableListOf<Any>() // Row.Header or Row.Item
+    private val displayRows = mutableListOf<Row>()
     private lateinit var rowAdapter: ExpenseDayAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -206,7 +206,7 @@ sealed class Row {
     data class Item(val t: Transaction) : Row()
 }
 
-class ExpenseDayAdapter(private val rows: MutableList<Any>) : RecyclerView.Adapter<ExpenseDayAdapter.VH>() {
+class ExpenseDayAdapter(private val rows: MutableList<Row>) : RecyclerView.Adapter<ExpenseDayAdapter.VH>() {
 
     private val dayLabelFmt = SimpleDateFormat("EEEE, d MMM", Locale.getDefault())
     private val timeFmt = SimpleDateFormat("hh:mm a", Locale.getDefault())

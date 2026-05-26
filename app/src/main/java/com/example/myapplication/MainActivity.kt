@@ -4,9 +4,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.view.Gravity
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
@@ -308,13 +306,4 @@ class MainActivity : AppCompatActivity() {
     }
 }
 
-/** Placeholder for Budget / Total tabs */
-class PlaceholderFragment(private val label: String) : Fragment() {
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        return TextView(requireContext()).apply {
-            text = "$label — coming soon"
-            gravity = android.view.Gravity.CENTER
-            textSize = 18f
-        }
-    }
-}
+

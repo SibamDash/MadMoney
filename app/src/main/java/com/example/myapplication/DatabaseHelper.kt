@@ -5,7 +5,13 @@ import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 
-class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, "transactions.db", null, 4) {
+class DatabaseHelper private constructor(context: Context) : SQLiteOpenHelper(context.applicationContext, "transactions.db", null, 4) {
+
+    companion object {
+        @Volatile private var instance: DatabaseHelper? = null
+        operator fun invoke(context: Context): DatabaseHelper =
+            instance ?: synchronized(this) { instance ?: DatabaseHelper(context).also { instance = it } }
+    }
 
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL("""
@@ -50,34 +56,30 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, "transactions
         return writableDatabase.insert("transactions", null, values)
     }
 
+    private fun android.database.Cursor.toTransaction() = Transaction(
+        id          = getLong(0),
+        title       = getString(1),
+        type        = getString(2),
+        amount      = getDouble(3),
+        category    = getString(4),
+        account     = getString(5),
+        note        = getString(6) ?: "",
+        description = getString(7) ?: "",
+        date        = getLong(8),
+        isCompleted = getInt(9) == 1,
+        completedAt = getLong(10),
+        isStarred   = getInt(11) == 1
+    )
+
     fun getTransactions(startDate: Long, endDate: Long): List<Transaction> {
         val list = mutableListOf<Transaction>()
         val cursor = readableDatabase.query(
-            "transactions",
-            null,
+            "transactions", null,
             "date BETWEEN ? AND ?",
             arrayOf(startDate.toString(), endDate.toString()),
             null, null, "date DESC"
         )
-        
-        cursor.use {
-            while (it.moveToNext()) {
-                list.add(Transaction(
-                    id = it.getLong(0),
-                    title = it.getString(1),
-                    type = it.getString(2),
-                    amount = it.getDouble(3),
-                    category = it.getString(4),
-                    account = it.getString(5),
-                    note = it.getString(6) ?: "",
-                    description = it.getString(7) ?: "",
-                    date = it.getLong(8),
-                    isCompleted = it.getInt(9) == 1,
-                    completedAt = it.getLong(10),
-                    isStarred = it.getInt(11) == 1
-                ))
-            }
-        }
+        cursor.use { while (it.moveToNext()) list.add(it.toTransaction()) }
         return list
     }
 
@@ -127,17 +129,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, "transactions
         val cursor = readableDatabase.query(
             "transactions", null, "isStarred = 1", null, null, null, "date DESC"
         )
-        cursor.use {
-            while (it.moveToNext()) {
-                list.add(Transaction(
-                    id = it.getLong(0), title = it.getString(1), type = it.getString(2),
-                    amount = it.getDouble(3), category = it.getString(4), account = it.getString(5),
-                    note = it.getString(6) ?: "", description = it.getString(7) ?: "",
-                    date = it.getLong(8), isCompleted = it.getInt(9) == 1,
-                    completedAt = it.getLong(10), isStarred = it.getInt(11) == 1
-                ))
-            }
-        }
+        cursor.use { while (it.moveToNext()) list.add(it.toTransaction()) }
         return list
     }
 }

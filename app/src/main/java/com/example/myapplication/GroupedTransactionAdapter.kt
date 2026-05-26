@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import java.io.File
 import java.text.SimpleDateFormat
@@ -28,6 +29,8 @@ class GroupedTransactionAdapter(
     private val rows = mutableListOf<GroupedRow>()
     private val dayFmt = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
     private val headerFmt = SimpleDateFormat("EEEE, d MMM yyyy", Locale.getDefault())
+    private val settledFmt = SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.getDefault())
+    private val timeFmt = SimpleDateFormat("hh:mm a", Locale.getDefault())
 
     private val defaultEmojis = mapOf(
         "Food" to "🍔", "Social Life" to "🎉", "Pets" to "🐾", "Transport" to "🚗",
@@ -38,7 +41,7 @@ class GroupedTransactionAdapter(
     )
 
     fun submitList(transactions: List<Transaction>) {
-        rows.clear()
+        val newRows = mutableListOf<GroupedRow>()
         val grouped = transactions.sortedByDescending { it.date }
             .groupBy { dayFmt.format(Date(it.date)) }
             .entries.sortedByDescending { it.key }
@@ -46,12 +49,27 @@ class GroupedTransactionAdapter(
         for ((_, items) in grouped) {
             val income  = items.filter { it.type == "income" }.sumOf { it.amount }
             val expense = items.filter { it.type == "expense" }.sumOf { it.amount }
-            val firstDate = Date(items.first().date)
-            val label = headerFmt.format(firstDate)
-            rows.add(GroupedRow.Header(label, income - expense, items.map { it.type }))
-            items.forEach { rows.add(GroupedRow.Item(it)) }
+            val label = headerFmt.format(Date(items.first().date))
+            newRows.add(GroupedRow.Header(label, income - expense, items.map { it.type }))
+            items.forEach { newRows.add(GroupedRow.Item(it)) }
         }
-        notifyDataSetChanged()
+
+        val diff = DiffUtil.calculateDiff(object : DiffUtil.Callback() {
+            override fun getOldListSize() = rows.size
+            override fun getNewListSize() = newRows.size
+            override fun areItemsTheSame(o: Int, n: Int): Boolean {
+                val oldRow = rows[o]; val newRow = newRows[n]
+                return when {
+                    oldRow is GroupedRow.Header && newRow is GroupedRow.Header -> oldRow.dateLabel == newRow.dateLabel
+                    oldRow is GroupedRow.Item   && newRow is GroupedRow.Item   -> oldRow.transaction.id == newRow.transaction.id
+                    else -> false
+                }
+            }
+            override fun areContentsTheSame(o: Int, n: Int) = rows[o] == newRows[n]
+        })
+        rows.clear()
+        rows.addAll(newRows)
+        diff.dispatchUpdatesTo(this)
     }
 
     override fun getItemViewType(position: Int) = if (rows[position] is GroupedRow.Header) 0 else 1
@@ -123,9 +141,6 @@ class GroupedTransactionAdapter(
                 holder as ItemVH
                 val t = row.transaction
                 val ctx = holder.itemView.context
-                val settledFmt = SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.getDefault())
-                val timeFmt = SimpleDateFormat("hh:mm a", Locale.getDefault())
-
                 // Show note as title if available, else fall back to category/title
                 holder.tvTitle.text = if (t.note.isNotBlank()) t.note else t.title
                 holder.tvAmount.text = "₹${t.amount.toInt()}"
