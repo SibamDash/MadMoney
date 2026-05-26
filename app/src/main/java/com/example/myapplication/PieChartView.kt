@@ -4,53 +4,64 @@ import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
 import android.view.View
+import androidx.core.content.ContextCompat
 
 class PieChartView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null
 ) : View(context, attrs) {
 
-    private val slices = mutableListOf<Pair<Float, Int>>() // (sweepAngle, color)
-    private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-    private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.WHITE
+    private val slices = mutableListOf<Pair<Float, Int>>()
+    private var centerLabel = ""
+
+    private val slicePaint  = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
+    private val holePaint   = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val labelPaint  = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         textAlign = Paint.Align.CENTER
-        textSize = 36f
+        textSize  = 42f
+        isFakeBoldText = true
     }
-    private val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        style = Paint.Style.STROKE
-        strokeWidth = 3f
+    private val subLabelPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        textAlign = Paint.Align.CENTER
+        textSize  = 28f
     }
 
-    fun setData(data: List<Pair<Float, Int>>) {
+    fun setData(data: List<Pair<Float, Int>>, center: String = "") {
         slices.clear()
         slices.addAll(data)
+        centerLabel = center
         invalidate()
     }
 
     override fun onDraw(canvas: Canvas) {
         if (slices.isEmpty()) return
-        borderPaint.color = androidx.core.content.ContextCompat.getColor(context, R.color.text_primary)
-        val size = minOf(width, height).toFloat()
-        val margin = size * 0.05f
-        val oval = RectF(margin, margin, size - margin, size - margin)
-        val cx = size / 2f
-        val cy = size / 2f
-        val radius = (size / 2f) - margin
+
+        holePaint.color   = ContextCompat.getColor(context, R.color.background)
+        labelPaint.color  = ContextCompat.getColor(context, R.color.text_primary)
+        subLabelPaint.color = ContextCompat.getColor(context, R.color.text_secondary)
+
+        val size    = minOf(width, height).toFloat()
+        val margin  = size * 0.04f
+        val oval    = RectF(margin, margin, size - margin, size - margin)
+        val cx      = size / 2f
+        val cy      = size / 2f
+        val radius  = size / 2f - margin
+        val holeR   = radius * 0.52f   // donut hole
+
         var startAngle = -90f
         for ((sweep, color) in slices) {
-            paint.color = color
-            canvas.drawArc(oval, startAngle, sweep, true, paint)
-            // divider line between slices
-            val rad = Math.toRadians(startAngle.toDouble())
-            canvas.drawLine(cx, cy,
-                cx + radius * Math.cos(rad).toFloat(),
-                cy + radius * Math.sin(rad).toFloat(),
-                borderPaint)
+            slicePaint.color = color
+            canvas.drawArc(oval, startAngle, sweep, true, slicePaint)
             startAngle += sweep
         }
-        // outer circle border
-        borderPaint.strokeWidth = 8f
-        canvas.drawCircle(cx, cy, radius, borderPaint)
-        borderPaint.strokeWidth = 3f
+
+        // punch out center hole
+        canvas.drawCircle(cx, cy, holeR, holePaint)
+
+        // center text
+        if (centerLabel.isNotEmpty()) {
+            val textY = cy - (labelPaint.descent() + labelPaint.ascent()) / 2f
+            canvas.drawText(centerLabel, cx, textY - 10f, labelPaint)
+            canvas.drawText("total", cx, textY + 30f, subLabelPaint)
+        }
     }
 }
