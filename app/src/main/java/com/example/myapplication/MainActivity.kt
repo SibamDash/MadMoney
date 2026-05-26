@@ -79,7 +79,7 @@ class MainActivity : AppCompatActivity() {
                 CalendarFragment(),
                 ChartFragment(),
                 BudgetFragment(),
-                PlaceholderFragment("Total")
+                TrendsFragment()
             )
             override fun getItemCount() = fragments.size
             override fun createFragment(position: Int) = fragments[position]
@@ -95,7 +95,7 @@ class MainActivity : AppCompatActivity() {
 
         val tabLayout = findViewById<TabLayout>(R.id.tabLayout)
         TabLayoutMediator(tabLayout, viewPager) { tab, pos ->
-            tab.text = listOf("Daily", "Calendar", "Graph", "Budget", "Total")[pos]
+            tab.text = listOf("Daily", "Calendar", "Graph", "Budget", "Trends")[pos]
         }.attach()
 
         setupSearch()
