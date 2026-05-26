@@ -9,7 +9,10 @@ import android.view.ViewGroup
 import android.widget.SearchView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomnavigation.BottomNavigationView
@@ -31,7 +34,13 @@ class ExpenseActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         setContentView(R.layout.activity_expense)
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.root)) { v, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(bars.left, bars.top, bars.right, bars.bottom)
+            insets
+        }
 
         filterTypes = intent.getStringArrayListExtra(EXTRA_TYPES) ?: arrayListOf("expense")
         sectionTitle = intent.getStringExtra(EXTRA_TITLE) ?: "Expenses"
@@ -49,7 +58,9 @@ class ExpenseActivity : AppCompatActivity() {
         setupBottomNavigation()
 
         findViewById<FloatingActionButton>(R.id.fabAdd).setOnClickListener {
-            startActivity(Intent(this, AddTransactionActivity::class.java))
+            val intent = Intent(this, AddTransactionActivity::class.java)
+            selectedDayCalendar?.let { intent.putExtra("selected_date_millis", it.timeInMillis) }
+            startActivity(intent)
         }
 
         loadTransactions()
@@ -121,13 +132,21 @@ class ExpenseActivity : AppCompatActivity() {
 
     private fun setupMonthNavigation() {
         findViewById<android.widget.ImageView>(R.id.ivBack).setOnClickListener {
-            selectedDayCalendar = null
-            calendar.add(Calendar.MONTH, -1)
+            if (selectedDayCalendar != null) {
+                selectedDayCalendar!!.add(Calendar.DAY_OF_MONTH, -1)
+                calendar.timeInMillis = selectedDayCalendar!!.timeInMillis
+            } else {
+                calendar.add(Calendar.MONTH, -1)
+            }
             loadTransactions()
         }
         findViewById<android.widget.ImageView>(R.id.ivForward).setOnClickListener {
-            selectedDayCalendar = null
-            calendar.add(Calendar.MONTH, 1)
+            if (selectedDayCalendar != null) {
+                selectedDayCalendar!!.add(Calendar.DAY_OF_MONTH, 1)
+                calendar.timeInMillis = selectedDayCalendar!!.timeInMillis
+            } else {
+                calendar.add(Calendar.MONTH, 1)
+            }
             loadTransactions()
         }
         findViewById<TextView>(R.id.tvDateRange).setOnClickListener {
@@ -137,6 +156,14 @@ class ExpenseActivity : AppCompatActivity() {
                 calendar.set(year, month, day)
                 loadTransactions()
             }, ref.get(Calendar.YEAR), ref.get(Calendar.MONTH), ref.get(Calendar.DAY_OF_MONTH)).show()
+        }
+        findViewById<TextView>(R.id.tvDateRange).setOnLongClickListener {
+            if (selectedDayCalendar != null) {
+                selectedDayCalendar = null
+                loadTransactions()
+                Toast.makeText(this, "Showing full month", Toast.LENGTH_SHORT).show()
+            }
+            true
         }
     }
 

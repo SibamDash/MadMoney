@@ -12,12 +12,15 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatButton
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import java.io.File
 import java.text.SimpleDateFormat
@@ -134,7 +137,13 @@ class AddTransactionActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         setContentView(R.layout.activity_add_transaction)
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.root)) { v, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(bars.left, bars.top, bars.right, bars.bottom)
+            insets
+        }
 
         val flipper = findViewById<ViewFlipper>(R.id.viewFlipper)
         val btnExpense = findViewById<AppCompatButton>(R.id.btnExpense)
@@ -201,6 +210,7 @@ class AddTransactionActivity : AppCompatActivity() {
         }
 
         findViewById<ImageView>(R.id.btnBack).setOnClickListener { finish() }
+        selectedDateMillis = intent.getLongExtra("selected_date_millis", System.currentTimeMillis())
         selectTab("expense")
     }
 
