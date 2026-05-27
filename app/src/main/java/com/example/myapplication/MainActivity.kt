@@ -31,6 +31,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var dailyFragment: DailyFragment
     private lateinit var viewPager: ViewPager2
     private var backPressedTime = 0L
+    private var budgetMode = "monthly" // "weekly", "monthly", "custom"
+    private var lastSummaryData: List<Transaction> = emptyList()
 
     private val exportLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri: Uri? ->
         uri ?: return@registerForActivityResult
@@ -97,6 +99,7 @@ class MainActivity : AppCompatActivity() {
 
         setupSearch()
         setupSettings()
+        setupBudgetModeSelector()
         applyPositionSettings(prefs)
 
         findViewById<FloatingActionButton>(R.id.fabAdd).setOnClickListener {
@@ -135,24 +138,93 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun updateSummary(data: List<Transaction>) {
+        lastSummaryData = data
         val cal = Calendar.getInstance()
-        val s = (cal.clone() as Calendar).apply { set(Calendar.DAY_OF_MONTH, 1); set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0); set(Calendar.SECOND, 0) }
-        val e = (cal.clone() as Calendar).apply { set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH)); set(Calendar.HOUR_OF_DAY, 23); set(Calendar.MINUTE, 59); set(Calendar.SECOND, 59) }
-        val month = data.filter { it.date in s.timeInMillis..e.timeInMillis }
-        val income  = month.filter { it.type == "income" }.sumOf { it.amount }
-        val expense = month.filter { it.type == "expense" }.sumOf { it.amount }
+
+        // Determine time window based on budgetMode
+        val (start, end, limitKey) = when (budgetMode) {
+            "weekly" -> {
+                val s = (cal.clone() as Calendar).apply {
+                    set(Calendar.DAY_OF_WEEK, firstDayOfWeek)
+                    set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0); set(Calendar.SECOND, 0)
+                }
+                val e = (s.clone() as Calendar).apply { add(Calendar.DAY_OF_WEEK, 7) }
+                Triple(s.timeInMillis, e.timeInMillis, "weekly_limit")
+            }
+            "custom" -> {
+                val settingsPrefs = getSharedPreferences("settings", MODE_PRIVATE)
+                val e = (cal.clone() as Calendar).apply {
+                    set(Calendar.HOUR_OF_DAY, 23); set(Calendar.MINUTE, 59); set(Calendar.SECOND, 59)
+                }
+                val s = (cal.clone() as Calendar).apply {
+                    set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0); set(Calendar.SECOND, 0)
+                    add(Calendar.YEAR,  -settingsPrefs.getInt("budget_custom_years", 0))
+                    add(Calendar.MONTH, -settingsPrefs.getInt("budget_custom_months", 0))
+                    add(Calendar.WEEK_OF_YEAR, -settingsPrefs.getInt("budget_custom_weeks", 0))
+                    add(Calendar.DAY_OF_YEAR, -settingsPrefs.getInt("budget_custom_days", 0))
+                }
+                Triple(s.timeInMillis, e.timeInMillis, "custom_limit")
+            }
+            else -> { // monthly
+                val s = (cal.clone() as Calendar).apply {
+                    set(Calendar.DAY_OF_MONTH, 1)
+                    set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0); set(Calendar.SECOND, 0)
+                }
+                val e = (cal.clone() as Calendar).apply {
+                    set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH))
+                    set(Calendar.HOUR_OF_DAY, 23); set(Calendar.MINUTE, 59); set(Calendar.SECOND, 59)
+                }
+                Triple(s.timeInMillis, e.timeInMillis, "monthly_limit")
+            }
+        }
+
+        val period = data.filter { it.date in start..end }
+        val income  = period.filter { it.type == "income" }.sumOf { it.amount }
+        val expense = period.filter { it.type == "expense" }.sumOf { it.amount }
         findViewById<TextView>(R.id.tvIncomeAmount).text  = "₹%.2f".format(income)
         findViewById<TextView>(R.id.tvExpenseAmount).text = "₹%.2f".format(expense)
-        val monthlyLimit = getSharedPreferences("budget", MODE_PRIVATE).getFloat("monthly_limit", 0f)
+
+        val limit = getSharedPreferences("budget", MODE_PRIVATE).getFloat(limitKey, 0f)
         val tvTotal = findViewById<TextView>(R.id.tvTotalAmount)
-        if (monthlyLimit > 0f) {
-            val remaining = monthlyLimit - expense
+        if (limit > 0f) {
+            val remaining = limit - expense
             tvTotal.text = "₹%.2f".format(remaining)
             tvTotal.setTextColor(androidx.core.content.ContextCompat.getColor(this,
                 if (remaining < 0) R.color.color_expense else R.color.color_income))
         } else {
             tvTotal.text = "No limit"
             tvTotal.setTextColor(androidx.core.content.ContextCompat.getColor(this, R.color.text_secondary))
+        }
+    }
+
+    private fun setupBudgetModeSelector() {
+        val settingsPrefs = getSharedPreferences("settings", MODE_PRIVATE)
+        val customName = settingsPrefs.getString("budget_custom_name", "")?.takeIf { it.isNotEmpty() } ?: "Custom"
+        val tvLabel = findViewById<TextView>(R.id.tvBudgetLabel)
+
+        fun updateLabel() {
+            tvLabel.text = when (budgetMode) {
+                "weekly" -> "Weekly ▾"
+                "custom" -> "$customName ▾"
+                else     -> "Monthly ▾"
+            }
+        }
+        updateLabel()
+
+        findViewById<View>(R.id.llBudgetLeft).setOnClickListener { anchor ->
+            val popup = android.widget.PopupMenu(this, anchor)
+            popup.menu.add(0, 0, 0, "Weekly")
+            if (settingsPrefs.getBoolean("budget_monthly_enabled", true))
+                popup.menu.add(0, 1, 1, "Monthly")
+            if (settingsPrefs.getBoolean("budget_custom_enabled", false))
+                popup.menu.add(0, 2, 2, customName)
+            popup.setOnMenuItemClickListener { item ->
+                budgetMode = when (item.itemId) { 0 -> "weekly"; 2 -> "custom"; else -> "monthly" }
+                updateLabel()
+                updateSummary(lastSummaryData)
+                true
+            }
+            popup.show()
         }
     }
 
