@@ -31,7 +31,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var dailyFragment: DailyFragment
     private lateinit var viewPager: ViewPager2
     private var backPressedTime = 0L
-    private var budgetMode = "monthly" // "weekly", "monthly", "custom"
+    private var budgetMode = "weekly" // "weekly", "monthly", "custom"
     private var lastSummaryData: List<Transaction> = emptyList()
 
     private val exportLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri: Uri? ->
