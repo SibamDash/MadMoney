@@ -466,7 +466,7 @@ class MainActivity : AppCompatActivity() {
         for (et in listOf(etFabMarginSide, etFabMarginBottom, etYears, etMonths, etWeeks, etDays, etCustomName, etCustomBudgetAmount)) {
             et.addTextChangedListener(textWatcher)
         }
-    }
+    }//made by sibam
 
     fun applyPositionSettings(prefs: android.content.SharedPreferences) {
         val density = resources.displayMetrics.density
