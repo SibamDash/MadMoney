@@ -186,7 +186,11 @@ class TrendsFragment : Fragment() {
         }
 
         view.findViewById<TextView>(R.id.tvTrendsTitle).text = title
-        view.findViewById<BarChartView>(R.id.barChart).setData(months)
+        val chart = view.findViewById<BarChartView>(R.id.barChart)
+        chart.setData(months)
+        val monthlyLimit = requireContext().getSharedPreferences("budget", android.content.Context.MODE_PRIVATE)
+            .getFloat("monthly_limit", 0f)
+        chart.setBudgetLimit(if (mode == Mode.CONSECUTIVE_MONTHS || mode == Mode.CUSTOM || mode == Mode.SIX_MONTHS) monthlyLimit else 0f)
 
         val ll = view.findViewById<LinearLayout>(R.id.llMonthRows)
         ll.removeAllViews()

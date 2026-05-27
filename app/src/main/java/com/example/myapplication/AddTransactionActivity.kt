@@ -154,9 +154,7 @@ class AddTransactionActivity : AppCompatActivity() {
             val goingRight = idx > flipper.displayedChild
             val prefs = getSharedPreferences("settings", MODE_PRIVATE)
             val style = prefs.getInt("transition_style", 0)
-            val dur = when (prefs.getInt("transition_speed", 1)) {
-                0 -> 150L; 2 -> 500L; 3 -> prefs.getInt("transition_custom_ms", 300).toLong(); else -> 300L
-            }
+            val dur = 300L
             fun anim(resId: Int) = android.view.animation.AnimationUtils.loadAnimation(this, resId).also { it.duration = dur }
             when (style) {
                 1 -> { // Fade
@@ -408,16 +406,8 @@ class AddTransactionActivity : AppCompatActivity() {
         val prefs = getSharedPreferences("settings", MODE_PRIVATE)
         val style = prefs.getInt("transition_style", 0)
         val dir   = prefs.getInt("slide_direction", 0)
-        val dur   = when (prefs.getInt("transition_speed", 1)) {
-            0 -> 150L; 2 -> 500L; 3 -> prefs.getInt("transition_custom_ms", 300).toLong(); else -> 300L
-        }
-        val interp: android.view.animation.Interpolator = when (prefs.getInt("transition_interpolator", 2)) {
-            0 -> android.view.animation.LinearInterpolator()
-            1 -> android.view.animation.AccelerateInterpolator()
-            3 -> android.view.animation.AccelerateDecelerateInterpolator()
-            4 -> android.view.animation.OvershootInterpolator()
-            else -> android.view.animation.DecelerateInterpolator()
-        }
+        val dur   = 300L
+        val interp: android.view.animation.Interpolator = android.view.animation.DecelerateInterpolator()
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
             val enter: android.transition.Transition = when (style) {
                 1, 3 -> android.transition.Fade()

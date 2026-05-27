@@ -21,8 +21,22 @@ class BarChartView @JvmOverloads constructor(
     private val paintYLabel  = Paint(Paint.ANTI_ALIAS_FLAG).apply { textAlign = Paint.Align.RIGHT;  textSize = 24f }
     private val paintGrid    = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = 1f }
 
+    private var budgetLimit: Float = 0f
+
+    private val paintLimit = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+        strokeWidth = 3f
+        pathEffect = DashPathEffect(floatArrayOf(20f, 10f), 0f)
+    }
+    private val paintLimitLabel = Paint(Paint.ANTI_ALIAS_FLAG).apply { textSize = 24f; textAlign = Paint.Align.LEFT }
+
     fun setData(months: List<MonthData>) {
         data = months
+        invalidate()
+    }
+
+    fun setBudgetLimit(limit: Float) {
+        budgetLimit = limit
         invalidate()
     }
 
@@ -34,6 +48,8 @@ class BarChartView @JvmOverloads constructor(
         paintText.color    = ContextCompat.getColor(context, R.color.text_secondary)
         paintYLabel.color  = ContextCompat.getColor(context, R.color.text_secondary)
         paintGrid.color    = ContextCompat.getColor(context, R.color.divider)
+        paintLimit.color   = ContextCompat.getColor(context, R.color.color_expense)
+        paintLimitLabel.color = ContextCompat.getColor(context, R.color.color_expense)
 
         val yAxisWidth  = 72f
         val paddingRight = 16f
@@ -42,7 +58,10 @@ class BarChartView @JvmOverloads constructor(
         val chartBottom  = height - labelHeight
         val chartHeight  = chartBottom - paddingTop
 
-        val maxVal = data.maxOf { max(it.income, it.expense) }.takeIf { it > 0 } ?: 1f
+        val maxVal = maxOf(
+            data.maxOf { max(it.income, it.expense) }.takeIf { it > 0 } ?: 1f,
+            budgetLimit
+        )
 
         // Y-axis grid lines + labels (4 lines)
         val steps = 4
@@ -79,6 +98,14 @@ class BarChartView @JvmOverloads constructor(
             )
 
             canvas.drawText(month.label, centerX, height - 8f, paintText)
+        }
+
+        // Budget limit line
+        if (budgetLimit > 0f) {
+            val limitY = paddingTop + chartHeight * (1f - budgetLimit / maxVal)
+            canvas.drawLine(yAxisWidth, limitY, width - paddingRight, limitY, paintLimit)
+            val limitLabel = if (budgetLimit >= 1000) "₹${(budgetLimit / 1000).toInt()}k" else "₹${budgetLimit.toInt()}"
+            canvas.drawText(limitLabel, yAxisWidth + 4f, limitY - 6f, paintLimitLabel)
         }
     }
 }

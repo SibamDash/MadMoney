@@ -143,7 +143,17 @@ class MainActivity : AppCompatActivity() {
         val expense = month.filter { it.type == "expense" }.sumOf { it.amount }
         findViewById<TextView>(R.id.tvIncomeAmount).text  = "₹%.2f".format(income)
         findViewById<TextView>(R.id.tvExpenseAmount).text = "₹%.2f".format(expense)
-        findViewById<TextView>(R.id.tvTotalAmount).text   = "₹%.2f".format(income - expense)
+        val monthlyLimit = getSharedPreferences("budget", MODE_PRIVATE).getFloat("monthly_limit", 0f)
+        val tvTotal = findViewById<TextView>(R.id.tvTotalAmount)
+        if (monthlyLimit > 0f) {
+            val remaining = monthlyLimit - expense
+            tvTotal.text = "₹%.2f".format(remaining)
+            tvTotal.setTextColor(androidx.core.content.ContextCompat.getColor(this,
+                if (remaining < 0) R.color.color_expense else R.color.color_income))
+        } else {
+            tvTotal.text = "No limit"
+            tvTotal.setTextColor(androidx.core.content.ContextCompat.getColor(this, R.color.text_secondary))
+        }
     }
 
     private fun setupSearch() {
@@ -242,20 +252,6 @@ class MainActivity : AppCompatActivity() {
         spinnerSlideDir.setSelection(prefs.getInt("slide_direction", 0))
         rowSlideDir.visibility = if (prefs.getInt("transition_style", 0) == 0) android.view.View.VISIBLE else android.view.View.GONE
 
-        val transitionSpeeds = listOf("Fast (150ms)", "Normal (300ms)", "Slow (500ms)", "Custom (set below)")
-        val spinnerSpeed = findViewById<android.widget.Spinner>(R.id.spinnerTransitionSpeed)
-        spinnerSpeed.adapter = android.widget.ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, transitionSpeeds)
-        spinnerSpeed.setSelection(prefs.getInt("transition_speed", 1))
-
-        val rowCustomDur = findViewById<android.view.View>(R.id.rowCustomDuration)
-        val etDuration = findViewById<android.widget.EditText>(R.id.etTransitionDuration)
-        prefs.getInt("transition_custom_ms", 300).let { etDuration.setText(it.toString()) }
-        rowCustomDur.visibility = if (prefs.getInt("transition_speed", 1) == 3) android.view.View.VISIBLE else android.view.View.GONE
-
-        val spinnerInterp = findViewById<android.widget.Spinner>(R.id.spinnerInterpolator)
-        spinnerInterp.adapter = android.widget.ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, listOf("Linear (no easing)", "Ease in (slow start)", "Ease out (slow end)", "Ease in-out", "Bouncy (overshoot)"))
-        spinnerInterp.setSelection(prefs.getInt("transition_interpolator", 2))
-
         val fabPositions = listOf("Right side", "Left side")
         val spinnerFab = findViewById<android.widget.Spinner>(R.id.spinnerFabPosition)
         spinnerFab.adapter = android.widget.ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, fabPositions)
@@ -279,9 +275,6 @@ class MainActivity : AppCompatActivity() {
         findViewById<android.widget.Button>(R.id.btnResetCustomize).setOnClickListener {
             spinnerStyle.setSelection(0)
             spinnerSlideDir.setSelection(0)
-            spinnerSpeed.setSelection(1)
-            etDuration.setText("300")
-            spinnerInterp.setSelection(2)
             spinnerFab.setSelection(0)
             etFabMarginSide.setText("16")
             etFabMarginBottom.setText("16")
@@ -351,10 +344,7 @@ class MainActivity : AppCompatActivity() {
                 .putInt("budget_custom_weeks",  etWeeks.text.toString().toIntOrNull() ?: 0)
                 .putInt("budget_custom_days",   etDays.text.toString().toIntOrNull() ?: 0)
                 .putInt("transition_style", spinnerStyle.selectedItemPosition)
-                .putInt("transition_speed", spinnerSpeed.selectedItemPosition)
-                .putInt("transition_custom_ms", etDuration.text.toString().toIntOrNull() ?: 300)
                 .putInt("slide_direction", spinnerSlideDir.selectedItemPosition)
-                .putInt("transition_interpolator", spinnerInterp.selectedItemPosition)
                 .putInt("fab_position",     spinnerFab.selectedItemPosition)
                 .putInt("fab_margin_side",  etFabMarginSide.text.toString().toIntOrNull() ?: 16)
                 .putInt("fab_margin_bottom", etFabMarginBottom.text.toString().toIntOrNull() ?: 16)
@@ -386,14 +376,7 @@ class MainActivity : AppCompatActivity() {
             }
             override fun onNothingSelected(p: android.widget.AdapterView<*>?) {}
         }
-        spinnerSpeed.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(p: android.widget.AdapterView<*>?, v: android.view.View?, pos: Int, id: Long) {
-                rowCustomDur.visibility = if (pos == 3) android.view.View.VISIBLE else android.view.View.GONE
-                saveSettings()
-            }
-            override fun onNothingSelected(p: android.widget.AdapterView<*>?) {}
-        }
-        for (sp in listOf(spinnerSlideDir, spinnerInterp, spinnerFab, spinnerTab)) sp.onItemSelectedListener = spinnerListener
+        for (sp in listOf(spinnerSlideDir, spinnerFab, spinnerTab)) sp.onItemSelectedListener = spinnerListener
 
         val switchListener = android.widget.CompoundButton.OnCheckedChangeListener { _, _ -> saveSettings() }
         for (sw in listOf(switchDarkMode, switchSummaryBar, switchTabBar, switchMonthly)) sw.setOnCheckedChangeListener(switchListener)
@@ -408,7 +391,7 @@ class MainActivity : AppCompatActivity() {
             override fun onTextChanged(s: CharSequence?, st: Int, c: Int, a: Int) {}
             override fun afterTextChanged(s: android.text.Editable?) = saveSettings()
         }
-        for (et in listOf(etDuration, etFabMarginSide, etFabMarginBottom, etYears, etMonths, etWeeks, etDays, etCustomName, etCustomBudgetAmount)) {
+        for (et in listOf(etFabMarginSide, etFabMarginBottom, etYears, etMonths, etWeeks, etDays, etCustomName, etCustomBudgetAmount)) {
             et.addTextChangedListener(textWatcher)
         }
     }
