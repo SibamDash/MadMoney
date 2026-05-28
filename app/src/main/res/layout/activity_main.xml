@@ -22,14 +22,13 @@
             android:background="@color/surface"
             android:baselineAligned="false">
 
-            <TextView
+            <ImageView
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="36dp"
                 android:layout_weight="1"
-                android:text="MadMoney"
-                android:textColor="@color/text_primary"
-                android:textSize="20sp"
-                android:textStyle="bold"/>
+                android:src="@mipmap/ic_launcher"
+                android:scaleType="fitStart"
+                android:contentDescription="MadMoney"/>
 
             <ImageView android:id="@+id/ivSearch" android:layout_width="24dp" android:layout_height="24dp" android:layout_marginEnd="12dp" android:src="@drawable/ic_search" app:tint="@color/text_primary" android:contentDescription="Search" />
             <ImageView android:id="@+id/ivSettings" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_settings" app:tint="@color/text_primary" android:contentDescription="Settings" />
