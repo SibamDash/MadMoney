@@ -29,10 +29,18 @@ import java.util.*
 class MainActivity : AppCompatActivity() {
 
     private lateinit var dailyFragment: DailyFragment
+    private lateinit var calendarFragment: CalendarFragment
+    private lateinit var trendsFragment: TrendsFragment
     private lateinit var viewPager: ViewPager2
     private var backPressedTime = 0L
     private var budgetMode = "weekly" // "weekly", "monthly", "custom"
-    private var lastSummaryData: List<Transaction> = emptyList()
+    internal var lastSummaryData: List<Transaction> = emptyList()
+
+    private val addTransactionLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+        if (::dailyFragment.isInitialized) dailyFragment.load()
+        if (::calendarFragment.isInitialized && calendarFragment.isAdded) calendarFragment.reload()
+        if (::trendsFragment.isInitialized && trendsFragment.isAdded) trendsFragment.reload()
+    }
 
     private val exportLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri: Uri? ->
         uri ?: return@registerForActivityResult
@@ -72,15 +80,17 @@ class MainActivity : AppCompatActivity() {
         }
 
         dailyFragment = DailyFragment()
+        calendarFragment = CalendarFragment()
+        trendsFragment = TrendsFragment()
 
         viewPager = findViewById(R.id.viewPager)
         viewPager.adapter = object : FragmentStateAdapter(this) {
             val fragments: List<Fragment> = listOf(
                 dailyFragment,
-                CalendarFragment(),
+                calendarFragment,
                 ChartFragment(),
                 BudgetFragment(),
-                TrendsFragment()
+                trendsFragment
             )
             override fun getItemCount() = fragments.size
             override fun createFragment(position: Int) = fragments[position]
@@ -103,7 +113,7 @@ class MainActivity : AppCompatActivity() {
         applyPositionSettings(prefs)
 
         findViewById<FloatingActionButton>(R.id.fabAdd).setOnClickListener {
-            startActivity(Intent(this, AddTransactionActivity::class.java))
+            addTransactionLauncher.launch(Intent(this, AddTransactionActivity::class.java))
             applyLaunchTransition()
         }
 
@@ -135,6 +145,11 @@ class MainActivity : AppCompatActivity() {
     fun navigateToDailyForDate(year: Int, month: Int, day: Int) {
         dailyFragment.setDateFilter(year, month, day)
         viewPager.currentItem = 0
+    }
+
+    fun launchAddTransaction(intent: Intent) {
+        addTransactionLauncher.launch(intent)
+        applyLaunchTransition()
     }
 
     fun updateSummary(data: List<Transaction>) {
@@ -331,8 +346,8 @@ class MainActivity : AppCompatActivity() {
 
         val etFabMarginSide = findViewById<android.widget.EditText>(R.id.etFabMarginSide)
         val etFabMarginBottom = findViewById<android.widget.EditText>(R.id.etFabMarginBottom)
-        etFabMarginSide.setText(prefs.getInt("fab_margin_side", 16).toString())
-        etFabMarginBottom.setText(prefs.getInt("fab_margin_bottom", 16).toString())
+        etFabMarginSide.setText(prefs.getInt("fab_margin_side", 30).toString())
+        etFabMarginBottom.setText(prefs.getInt("fab_margin_bottom", 60).toString())
 
         val tabPositions = listOf("Below search bar", "Above search bar")
         val spinnerTab = findViewById<android.widget.Spinner>(R.id.spinnerTabPosition)
@@ -348,8 +363,8 @@ class MainActivity : AppCompatActivity() {
             spinnerStyle.setSelection(0)
             spinnerSlideDir.setSelection(0)
             spinnerFab.setSelection(0)
-            etFabMarginSide.setText("16")
-            etFabMarginBottom.setText("16")
+            etFabMarginSide.setText("30")
+            etFabMarginBottom.setText("60")
             spinnerTab.setSelection(0)
             switchSummaryBar.isChecked = true
             switchTabBar.isChecked = true
@@ -418,8 +433,8 @@ class MainActivity : AppCompatActivity() {
                 .putInt("transition_style", spinnerStyle.selectedItemPosition)
                 .putInt("slide_direction", spinnerSlideDir.selectedItemPosition)
                 .putInt("fab_position",     spinnerFab.selectedItemPosition)
-                .putInt("fab_margin_side",  etFabMarginSide.text.toString().toIntOrNull() ?: 16)
-                .putInt("fab_margin_bottom", etFabMarginBottom.text.toString().toIntOrNull() ?: 16)
+                .putInt("fab_margin_side",  etFabMarginSide.text.toString().toIntOrNull() ?: 30)
+                .putInt("fab_margin_bottom", etFabMarginBottom.text.toString().toIntOrNull() ?: 60)
                 .putInt("tab_position",     spinnerTab.selectedItemPosition)
                 .putBoolean("show_summary_bar", switchSummaryBar.isChecked)
                 .putBoolean("show_tab_bar", switchTabBar.isChecked)
@@ -474,8 +489,8 @@ class MainActivity : AppCompatActivity() {
         // FAB position & margins
         val fab = findViewById<FloatingActionButton>(R.id.fabAdd)
         val lp = fab.layoutParams as android.widget.RelativeLayout.LayoutParams
-        val marginSidePx   = (prefs.getInt("fab_margin_side", 16) * density).toInt()
-        val marginBottomPx = (prefs.getInt("fab_margin_bottom", 16) * density).toInt()
+        val marginSidePx   = (prefs.getInt("fab_margin_side", 30) * density).toInt()
+        val marginBottomPx = (prefs.getInt("fab_margin_bottom", 60) * density).toInt()
         if (prefs.getInt("fab_position", 0) == 1) {
             lp.removeRule(android.widget.RelativeLayout.ALIGN_PARENT_END)
             lp.addRule(android.widget.RelativeLayout.ALIGN_PARENT_START)

@@ -53,15 +53,15 @@ class BarChartView @JvmOverloads constructor(
 
         val yAxisWidth  = 72f
         val paddingRight = 16f
-        val paddingTop   = 16f
+        val paddingTop   = 40f
         val labelHeight  = 40f
         val chartBottom  = height - labelHeight
         val chartHeight  = chartBottom - paddingTop
 
-        val maxVal = maxOf(
-            data.maxOf { max(it.income, it.expense) }.takeIf { it > 0 } ?: 1f,
-            budgetLimit
-        )
+        val maxVal = run {
+            val dataMax = data.maxOf { max(it.income, it.expense) }.takeIf { it > 0 } ?: 1f
+            if (budgetLimit > 0f) maxOf(dataMax, budgetLimit * 1.2f) else dataMax
+        }
 
         // Y-axis grid lines + labels (4 lines)
         val steps = 4
@@ -104,8 +104,9 @@ class BarChartView @JvmOverloads constructor(
         if (budgetLimit > 0f) {
             val limitY = paddingTop + chartHeight * (1f - budgetLimit / maxVal)
             canvas.drawLine(yAxisWidth, limitY, width - paddingRight, limitY, paintLimit)
-            val limitLabel = if (budgetLimit >= 1000) "₹${(budgetLimit / 1000).toInt()}k" else "₹${budgetLimit.toInt()}"
-            canvas.drawText(limitLabel, yAxisWidth + 4f, limitY - 6f, paintLimitLabel)
+            val limitLabel = "Max Budget " + if (budgetLimit >= 1000) "₹${(budgetLimit / 1000).toInt()}k" else "₹${budgetLimit.toInt()}"
+            // Draw label above the line
+            canvas.drawText(limitLabel, yAxisWidth + 4f, limitY - 8f, paintLimitLabel)
         }
     }
 }

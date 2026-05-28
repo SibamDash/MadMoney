@@ -52,7 +52,7 @@ class DailyFragment : Fragment() {
             },
             onLongClick = { t, which ->
                 when (which) {
-                    0 -> startActivity(
+                    0 -> (activity as? MainActivity)?.launchAddTransaction(
                         Intent(requireContext(), AddTransactionActivity::class.java).apply {
                             putExtra("edit_id", t.id)
                             putExtra("edit_title", t.title)
@@ -94,6 +94,7 @@ class DailyFragment : Fragment() {
     fun clearDateFilter() { selectedDate = null; if (isAdded) load() }
 
     fun load() {
+        if (!isAdded || !::adapter.isInitialized) return
         val cal = selectedDate
         val (start, end) = if (cal != null) {
             val s = java.util.Calendar.getInstance().apply { set(cal.first, cal.second, cal.third, 0, 0, 0); set(java.util.Calendar.MILLISECOND, 0) }

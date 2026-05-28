@@ -33,6 +33,7 @@ class BudgetFragment : Fragment() {
             val v = etWeekly.text.toString().toFloatOrNull() ?: return@setOnClickListener
             prefs.edit().putFloat("weekly_limit", v).apply()
             refreshWeekly(view, prefs)
+            (activity as? MainActivity)?.let { it.updateSummary(it.lastSummaryData) }
         }
         setupToggle(view, R.id.tvWeeklyDetailsToggle, R.id.layoutWeeklyDetails)
         refreshWeekly(view, prefs)
@@ -45,6 +46,7 @@ class BudgetFragment : Fragment() {
             val v = etMonthly.text.toString().toFloatOrNull() ?: return@setOnClickListener
             prefs.edit().putFloat("monthly_limit", v).apply()
             refreshMonthly(view, prefs)
+            (activity as? MainActivity)?.let { it.updateSummary(it.lastSummaryData) }
         }
         setupToggle(view, R.id.tvMonthlyDetailsToggle, R.id.layoutMonthlyDetails)
         refreshMonthly(view, prefs)
@@ -60,6 +62,7 @@ class BudgetFragment : Fragment() {
             val v = etCustom.text.toString().toFloatOrNull() ?: return@setOnClickListener
             prefs.edit().putFloat("custom_limit", v).apply()
             refreshCustom(view, prefs, settingsPrefs)
+            (activity as? MainActivity)?.let { it.updateSummary(it.lastSummaryData) }
         }
         setupToggle(view, R.id.tvCustomDetailsToggle, R.id.layoutCustomDetails)
         refreshCustom(view, prefs, settingsPrefs)

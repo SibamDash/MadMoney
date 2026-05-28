@@ -48,6 +48,15 @@ class CalendarFragment : Fragment() {
             .setNegativeButton("Cancel", null).show()
     }
 
+    override fun onResume() {
+        super.onResume()
+        if (isAdded) loadCalendar()
+    }
+
+    fun reload() {
+        if (isAdded) loadCalendar()
+    }
+
     private fun loadCalendar() {
         val fmt = SimpleDateFormat("MMMM yyyy", Locale.getDefault())
         tvMonthYear.text = fmt.format(calendar.time)

@@ -65,6 +65,8 @@ class TrendsFragment : Fragment() {
 
     override fun onResume() { super.onResume(); view?.let { load(it) } }
 
+    fun reload() { if (isAdded) view?.let { load(it) } }
+
     private fun pickDate(view: View, isFrom: Boolean) {
         if (!isVisible) return
         val cal = Calendar.getInstance()
