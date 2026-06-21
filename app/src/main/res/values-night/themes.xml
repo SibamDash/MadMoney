@@ -10,6 +10,8 @@
         <item name="android:textColorHint">@color/text_hint</item>
         <item name="android:navigationBarColor">@color/background</item>
         <item name="android:statusBarColor">@color/background</item>
+        <item name="alertDialogTheme">@style/RoundedAlertDialogTheme</item>
+        <item name="android:alertDialogTheme">@style/RoundedAlertDialogTheme</item>
     </style>
 
     <style name="Theme.MyApplication" parent="Base.Theme.MyApplication" />

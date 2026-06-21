@@ -24,6 +24,17 @@
             app:tint="@color/text_primary"
             android:contentDescription="Back" />
 
+        <ImageView
+            android:id="@+id/logo"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginStart="12dp"
+            android:src="@mipmap/ic_launcher"
+            android:contentDescription="Logo"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackgroundBorderless"/>
+
         <!-- Tappable month/year label -->
         <LinearLayout
             android:id="@+id/layoutMonthPicker"
@@ -53,9 +64,9 @@
                 android:paddingBottom="2dp"/>
         </LinearLayout>
 
-        <!-- Dummy view to balance ivBack for perfect centering -->
+        <!-- Dummy view to balance ivBack + logo for perfect centering -->
         <View
-            android:layout_width="24dp"
+            android:layout_width="68dp"
             android:layout_height="24dp" />
     </LinearLayout>
 

@@ -9,6 +9,13 @@
         <item name="android:textColorPrimary">@color/text_primary</item>
         <item name="android:textColorSecondary">@color/text_secondary</item>
         <item name="android:textColorHint">@color/text_hint</item>
+        <item name="alertDialogTheme">@style/RoundedAlertDialogTheme</item>
+        <item name="android:alertDialogTheme">@style/RoundedAlertDialogTheme</item>
+    </style>
+
+    <style name="RoundedAlertDialogTheme" parent="Theme.Material3.DayNight.Dialog.Alert">
+        <item name="dialogCornerRadius">24dp</item>
+        <item name="android:dialogCornerRadius">24dp</item>
     </style>
 
     <style name="Theme.MyApplication" parent="Base.Theme.MyApplication" />

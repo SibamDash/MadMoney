@@ -19,6 +19,7 @@
 
         <!-- Left: back arrow + date nav -->
         <LinearLayout
+            android:id="@+id/llDateNav"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -32,6 +33,17 @@
                 android:src="@drawable/ic_arrow_back"
                 app:tint="@color/text_primary"
                 android:contentDescription="Back" />
+
+            <ImageView
+                android:id="@+id/logo"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_marginStart="12dp"
+                android:src="@mipmap/ic_launcher"
+                android:contentDescription="Logo"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?attr/selectableItemBackgroundBorderless"/>
 
             <TextView
                 android:id="@+id/tvDateRange"
@@ -64,6 +76,18 @@
             android:textStyle="bold"
             android:layout_marginEnd="12dp"/>
 
+        <!-- Search Bar (placed inside topBar) -->
+        <SearchView
+            android:id="@+id/searchView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:visibility="gone"
+            android:background="@color/surface"
+            android:queryHint="Search by name, category, type, amount..."
+            android:iconifiedByDefault="false"
+            android:layout_marginEnd="8dp"/>
+
         <ImageView
             android:id="@+id/ivSearch"
             android:layout_width="24dp"
@@ -73,21 +97,10 @@
             android:contentDescription="Search" />
     </LinearLayout>
 
-    <!-- Search Bar (hidden by default) -->
-    <SearchView
-        android:id="@+id/searchView"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/topBar"
-        android:visibility="gone"
-        android:background="@color/surface"
-        android:queryHint="Search by name, category, type, amount..."
-        android:iconifiedByDefault="false"/>
-
     <!-- Total Banner -->
     <LinearLayout
         android:id="@+id/totalSection"
-        android:layout_below="@id/searchView"
+        android:layout_below="@id/topBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"

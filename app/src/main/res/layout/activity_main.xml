@@ -17,12 +17,15 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:padding="16dp"
+            android:paddingHorizontal="16dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="4dp"
             android:gravity="center_vertical"
             android:background="@color/surface"
             android:baselineAligned="false">
 
             <ImageView
+                android:id="@+id/logo"
                 android:layout_width="0dp"
                 android:layout_height="36dp"
                 android:layout_weight="1"
@@ -30,39 +33,38 @@
                 android:scaleType="fitStart"
                 android:contentDescription="MadMoney"/>
 
+            <!-- Search Bar + field dropdown (placed inside topBar) -->
+            <LinearLayout
+                android:id="@+id/searchView"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:visibility="gone"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginEnd="8dp">
+
+                <SearchView
+                    android:id="@+id/searchInput"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:queryHint="Search..."
+                    android:iconifiedByDefault="false"/>
+
+                <Spinner
+                    android:id="@+id/spinnerSearchBy"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+            </LinearLayout>
+
             <ImageView android:id="@+id/ivSearch" android:layout_width="24dp" android:layout_height="24dp" android:layout_marginEnd="12dp" android:src="@drawable/ic_search" app:tint="@color/text_primary" android:contentDescription="Search" />
             <ImageView android:id="@+id/ivSettings" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_settings" app:tint="@color/text_primary" android:contentDescription="Settings" />
         </LinearLayout>
 
-        <!-- Search Bar + field dropdown -->
-        <LinearLayout
-            android:id="@+id/searchView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/topBar"
-            android:visibility="gone"
-            android:background="@color/surface"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
-
-            <SearchView
-                android:id="@+id/searchInput"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:queryHint="Search..."
-                android:iconifiedByDefault="false"/>
-
-            <Spinner
-                android:id="@+id/spinnerSearchBy"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"/>
-        </LinearLayout>
-
         <com.google.android.material.tabs.TabLayout
             android:id="@+id/tabLayout"
-            android:layout_below="@id/searchView"
+            android:layout_below="@id/topBar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@color/surface"
@@ -98,11 +100,54 @@
             </LinearLayout>
         </LinearLayout>
 
+        <!-- Multi-select action bar (hidden by default) -->
+        <LinearLayout
+            android:id="@+id/multiSelectBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/summary"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="10dp"
+            android:background="@color/orange_primary"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/tvMultiSelectInfo"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Select transactions to save"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"/>
+
+            <Button
+                android:id="@+id/btnMultiSelectDone"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Done"
+                android:textColor="@color/orange_primary"
+                android:backgroundTint="#FFFFFF"
+                android:layout_marginStart="8dp"/>
+
+            <Button
+                android:id="@+id/btnMultiSelectCancel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Cancel"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="@android:color/transparent"
+                android:layout_marginStart="4dp"/>
+
+        </LinearLayout>
+
         <androidx.viewpager2.widget.ViewPager2
             android:id="@+id/viewPager"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_below="@id/summary"/>
+            android:layout_below="@id/multiSelectBar"/>
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/fabAdd"
